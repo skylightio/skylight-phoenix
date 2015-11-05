@@ -1,5 +1,6 @@
 defmodule Skylight.NIFTest do
   use ExUnit.Case
+  alias Skylight.TestHelpers
 
   alias Skylight.NIF
 
@@ -16,8 +17,12 @@ defmodule Skylight.NIFTest do
   end
 
   test "instrumenter_new/1" do
+    env = [
+      "SKYLIGHT_AUTHENTICATION", TestHelpers.auth_token(),
+    ]
+
     # For now, not raising is already a victory :)
-    NIF.instrumenter_new(["SKYLIGHT_VERSION", "0.7.0"])
+    NIF.instrumenter_new(env)
   end
 
   test "lex_sql/1" do
