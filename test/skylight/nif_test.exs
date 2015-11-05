@@ -15,6 +15,11 @@ defmodule Skylight.NIFTest do
     assert hrtime > 1_000_000_000_000
   end
 
+  test "instrumenter_new/1" do
+    # For now, not raising is already a victory :)
+    NIF.instrumenter_new(["SKYLIGHT_VERSION", "0.7.0"])
+  end
+
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
     assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";

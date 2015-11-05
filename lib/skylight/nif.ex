@@ -13,6 +13,7 @@ defmodule Skylight.NIF do
   nifs = [
     {:load_libskylight, 1},
     {:hrtime, 0},
+    {:instrumenter_new, 1},
     {:lex_sql, 1},
   ]
 
