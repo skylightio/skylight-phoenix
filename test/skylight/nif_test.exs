@@ -5,12 +5,18 @@ defmodule Skylight.NIFTest do
 
   @libskylight_path "native/skylight_x86_64-darwin/libskylight.dylib"
 
-  test "load_libskylight/1" do
-    # Let's try this first as if the library is already loaded, then it will
-    # always return :already_loaded.
-    assert {:error, :loading_failed} = NIF.load_libskylight("nonexistent_path")
+  setup_all do
+    :ok = NIF.load_libskylight(@libskylight_path)
+  end
 
-    assert :ok = NIF.load_libskylight(@libskylight_path)
-    assert :already_loaded = NIF.load_libskylight(@libskylight_path)
+  test "hrtime/0" do
+    hrtime = NIF.hrtime()
+    assert is_integer(hrtime)
+    assert hrtime > 1_000_000_000_000
+  end
+
+  test "lex_sql/1" do
+    sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
+    assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
   end
 end

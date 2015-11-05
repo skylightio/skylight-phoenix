@@ -12,6 +12,8 @@ defmodule Skylight.NIF do
   # exception.
   nifs = [
     {:load_libskylight, 1},
+    {:hrtime, 0},
+    {:lex_sql, 1},
   ]
 
   for {name, arity} <- nifs do
