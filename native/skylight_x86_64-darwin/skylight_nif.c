@@ -5,8 +5,11 @@
 #include <stdio.h>
 
 // Bunch of macros.
+
+// Raises an Erlang exception with `msg` as the reason (as an Erlang char list).
 #define ERL_RAISE(msg) return enif_raise_exception(env, enif_make_string(env, (msg), ERL_NIF_LATIN1))
 
+// Converts an Erlang binary (`bin`) to a `sky_buf_t` buffer struct.
 #define BINARY_TO_BUF(bin)                      \
   (sky_buf_t) {                                 \
     .data = bin.data,                           \
@@ -19,8 +22,11 @@ ERL_NIF_TERM atom_already_loaded;
 ERL_NIF_TERM atom_error;
 ERL_NIF_TERM atom_loading_failed;
 
+// Resource type for Skylight instrumenters. It's initialized in the `load`
+// function.
 ErlNifResourceType *INSTRUMENTER_RES_TYPE;
 
+// Destructor for `INSTRUMENTER_RES_TYPE` resources.
 void instrumenter_res_destructor(ErlNifEnv *env, void *obj) {
   printf("Instrumenter resource being destroyed!\n");
 }
@@ -36,6 +42,7 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   atom_error = enif_make_atom(env, "error");
   atom_loading_failed = enif_make_atom(env, "loading_failed");
 
+  // Open the resource type for the instrumenter.
   INSTRUMENTER_RES_TYPE = enif_open_resource_type(env,
                                                   "Elixir.Skylight.NIF",
                                                   "instrumenter",
@@ -49,7 +56,7 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
 static ERL_NIF_TERM load_libskylight(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary path_bin;
 
-  if (argc != 1 || !enif_is_binary(env,argv[0])) {
+  if (argc != 1 || !enif_is_binary(env, argv[0])) {
     return enif_make_badarg(env);
   }
 
@@ -84,44 +91,43 @@ static ERL_NIF_TERM hrtime(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 // The `env` array passed as the first argument to sky_instrumenter_new() is an
 // array of env variables and values that looks like this:
 //
-//     ["SKYLIGHT_VERSION", "0.8.1", "SKYLIGHT_LAZY_START", "true"]
+//     [<<"SKYLIGHT_VERSION">>, <<"0.8.1">>,
+//      <<"SKYLIGHT_LAZY_START">>, <<"true">>]
 //
 static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  sky_instrumenter_t *instrumenter;
+  ERL_NIF_TERM erl_env = argv[0];
   sky_buf_t sky_env[256];
+
+  // Get the length of the env list.
   unsigned int envc;
-  ERL_NIF_TERM env_list = argv[0];
+  enif_get_list_length(env, erl_env, &envc);
 
   // The Ruby extension raises if the env array has more than 256 elements, so
   // let's do the same.
-  enif_get_list_length(env, env_list, &envc);
   if (envc >= 256) {
     ERL_RAISE("env array has more than 255 elements");
   }
 
-  ERL_NIF_TERM head, tail;
-
-  tail = env_list;
-
-  ErlNifBinary current_str;
-  sky_buf_t current_sky_buf;
+  ERL_NIF_TERM head;
+  ERL_NIF_TERM tail = erl_env;
+  ErlNifBinary current_bin;
 
   for (int i = 0; i < envc; i++) {
+    // Replace `head` with the current element and `tail` with the new tail to
+    // reuse in the next iteration.
     enif_get_list_cell(env, tail, &head, &tail);
-    enif_inspect_binary(env, head, &current_str);
-    current_sky_buf = BINARY_TO_BUF(current_str);
-    sky_env[i] = current_sky_buf;
+    enif_inspect_binary(env, head, &current_bin);
+    sky_env[i] = BINARY_TO_BUF(current_bin);
   }
 
   // Let's load the instrumenter into the `instrumenter` variable.
+  sky_instrumenter_t *instrumenter;
   sky_instrumenter_new(sky_env, (int) envc, &instrumenter);
 
-  sky_instrumenter_t *instrumenter_res = enif_alloc_resource(INSTRUMENTER_RES_TYPE,
-                                                             sizeof(sky_instrumenter_t *));
+  sky_instrumenter_t *resource = enif_alloc_resource(INSTRUMENTER_RES_TYPE, sizeof(sky_instrumenter_t *));
+  memcpy((void *) resource, (void *) instrumenter, sizeof(sky_instrumenter_t *));
 
-  memcpy((void *) instrumenter_res, (void *) instrumenter, sizeof(sky_instrumenter_t *));
-
-  return enif_make_resource(env, instrumenter_res);
+  return enif_make_resource(env, resource);
 }
 
 // Wraps sky_lex_sql().
