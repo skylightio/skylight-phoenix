@@ -15,6 +15,8 @@ defmodule Skylight.NIF do
     {:hrtime, 0},
     {:instrumenter_new, 1},
     {:instrumenter_start, 1},
+    {:instrumenter_stop, 1},
+    {:trace_new, 3},
     {:lex_sql, 1},
   ]
 
@@ -27,9 +29,9 @@ defmodule Skylight.NIF do
   end
 
   defp nif_path() do
-    __ENV__.file
-    |> Path.join("../../../native/skylight_x86_64-darwin/skylight_nif")
-    |> Path.expand
+    Application.app_dir(:skylight, "priv")
+    |> Path.join("skylight_x86_64-darwin")
+    |> Path.join("skylight_nif")
     |> String.to_char_list
   end
 end
