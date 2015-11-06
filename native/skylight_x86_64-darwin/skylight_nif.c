@@ -105,7 +105,7 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
   // The Ruby extension raises if the env array has more than 256 elements, so
   // let's do the same.
   if (envc >= 256) {
-    ERL_RAISE("env array has more than 255 elements");
+    ERL_RAISE("env array has more than 256 elements");
   }
 
   ERL_NIF_TERM head;
@@ -124,10 +124,28 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
   sky_instrumenter_t *instrumenter;
   sky_instrumenter_new(sky_env, (int) envc, &instrumenter);
 
-  sky_instrumenter_t *resource = enif_alloc_resource(INSTRUMENTER_RES_TYPE, sizeof(sky_instrumenter_t *));
-  memcpy((void *) resource, (void *) instrumenter, sizeof(sky_instrumenter_t *));
+  sky_instrumenter_t **resource =
+    enif_alloc_resource(INSTRUMENTER_RES_TYPE, sizeof(sky_instrumenter_t *));
 
-  return enif_make_resource(env, resource);
+  memcpy((void *) resource, (void *) &instrumenter, sizeof(sky_instrumenter_t *));
+
+  ERL_NIF_TERM term = enif_make_resource(env, resource);
+
+  // Not sure if this is necessary yet:
+  // enif_release_resource(resource);
+
+  return term;
+}
+
+// Wraps sky_instrumenter_start().
+static ERL_NIF_TERM instrumenter_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  const sky_instrumenter_t **resource;
+  enif_get_resource(env, argv[0], INSTRUMENTER_RES_TYPE, (void *) &resource);
+
+  const sky_instrumenter_t *instrumenter = *resource;
+
+  int res = sky_instrumenter_start(instrumenter);
+  return (res == 0) ? atom_ok : atom_error;
 }
 
 // Wraps sky_lex_sql().
@@ -170,6 +188,7 @@ static ErlNifFunc nif_funcs[] = {
   {"load_libskylight", 1, load_libskylight},
   {"hrtime"          , 0, hrtime},
   {"instrumenter_new", 1, instrumenter_new},
+  {"instrumenter_start", 1, instrumenter_start},
   {"lex_sql"         , 1, lex_sql}
 };
 

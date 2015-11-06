@@ -14,6 +14,7 @@ defmodule Skylight.NIF do
     {:load_libskylight, 1},
     {:hrtime, 0},
     {:instrumenter_new, 1},
+    {:instrumenter_start, 1},
     {:lex_sql, 1},
   ]
 
