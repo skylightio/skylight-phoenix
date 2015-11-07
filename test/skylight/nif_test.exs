@@ -56,6 +56,12 @@ defmodule Skylight.NIFTest do
     assert is_integer(NIF.trace_start(trace))
   end
 
+  test "trace_endpoint/1" do
+    endpoint = "MyController#my_trace_endpoint_to_check"
+    trace = NIF.trace_new(100, UUID.uuid4(), endpoint)
+    assert NIF.trace_endpoint(trace) == endpoint
+  end
+
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
     assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";

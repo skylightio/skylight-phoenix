@@ -16,6 +16,13 @@
     .len = bin.size,                            \
   }
 
+// Converts a `sky_buf_t` buffer to an Erlang binary (`ErlNifBinary`) struct.
+#define BUF_TO_BINARY(buf) \
+  (ErlNifBinary) {         \
+    .data = buf.data,      \
+    .size = buf.len,       \
+  }
+
 // Returns `ok` if `res` is 0 (success), `error` otherwise.
 #define FFI_RESULT(res) ((res) == 0) ? atom_ok : atom_error
 
@@ -198,9 +205,9 @@ static ERL_NIF_TERM instrumenter_stop(ErlNifEnv *env, int argc, const ERL_NIF_TE
 }
 
 // Wraps:
-//     int sky_trace_new(uint64_t start, sky_buf_t uuid, sky_buf_t endpoint, sky_trace_t** out);
+//   int sky_trace_new(uint64_t start, sky_buf_t uuid, sky_buf_t endpoint, sky_trace_t** out);
 // as
-//     trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
+//   trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
 static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifUInt64 start;
   enif_get_uint64(env, argv[0], &start);
@@ -223,9 +230,9 @@ static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 }
 
 // Wraps:
-//     int sky_trace_start(sky_trace_t* trace, uint64_t* out);
+//   int sky_trace_start(sky_trace_t* trace, uint64_t* out);
 // as
-//     trace_start(trace :: <resource>) :: integer
+//   trace_start(trace :: <resource>) :: integer
 static ERL_NIF_TERM trace_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
@@ -234,6 +241,22 @@ static ERL_NIF_TERM trace_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
   MAYBE_RAISE_FFI(sky_trace_start(trace, &out));
 
   return enif_make_uint64(env, (ErlNifUInt64) out);
+}
+
+// Wraps:
+//   int sky_trace_endpoint(sky_trace_t* trace, sky_buf_t* out);
+// in:
+//   trace_endpoint(trace :: <resource>) :: binary
+static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  sky_buf_t endpoint_buf;
+  MAYBE_RAISE_FFI(sky_trace_endpoint(trace, &endpoint_buf));
+
+  ErlNifBinary endpoint_bin = BUF_TO_BINARY(endpoint_buf);
+
+  return enif_make_binary(env, &endpoint_bin);
 }
 
 // Wraps:
@@ -298,6 +321,7 @@ static ErlNifFunc nif_funcs[] = {
   {"instrumenter_stop", 1, instrumenter_stop},
   {"trace_new", 3, trace_new},
   {"trace_start", 1, trace_start},
+  {"trace_endpoint", 1, trace_endpoint},
   {"lex_sql", 1, lex_sql}
 };
 

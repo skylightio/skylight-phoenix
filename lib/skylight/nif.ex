@@ -18,6 +18,7 @@ defmodule Skylight.NIF do
     {:instrumenter_stop, 1},
     {:trace_new, 3},
     {:trace_start, 1},
+    {:trace_endpoint, 1},
     {:lex_sql, 1},
   ]
 
