@@ -260,6 +260,23 @@ static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 }
 
 // Wraps:
+//   int sky_trace_set_endpoint(const sky_trace_t* trace, sky_buf_t endpoint);
+// in:
+//   trace_set_endpoint(trace :: <resource>, endpoint :: binary) :: :ok | :error
+static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  ErlNifBinary endpoint_bin;
+  enif_inspect_binary(env, argv[1], &endpoint_bin);
+
+  sky_buf_t endpoint_buf = BINARY_TO_BUF(endpoint_bin);
+
+  int res = sky_trace_set_endpoint(trace, endpoint_buf);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
 //   int sky_lex_sql(sky_buf_t sql, sky_buf_t* title_buf, sky_buf_t* desc_buf);
 // in:
 //   lex_sql(sql :: binary) :: binary
@@ -322,6 +339,7 @@ static ErlNifFunc nif_funcs[] = {
   {"trace_new", 3, trace_new},
   {"trace_start", 1, trace_start},
   {"trace_endpoint", 1, trace_endpoint},
+  {"trace_set_endpoint", 2, trace_set_endpoint},
   {"lex_sql", 1, lex_sql}
 };
 

@@ -56,10 +56,13 @@ defmodule Skylight.NIFTest do
     assert is_integer(NIF.trace_start(trace))
   end
 
-  test "trace_endpoint/1" do
+  test "trace_endpoint/1 and trace_set_endpoint/2" do
     endpoint = "MyController#my_trace_endpoint_to_check"
+    new_endpoint = "MyController#new_endpoint"
     trace = NIF.trace_new(100, UUID.uuid4(), endpoint)
     assert NIF.trace_endpoint(trace) == endpoint
+    assert :ok = NIF.trace_set_endpoint(trace, new_endpoint)
+    assert NIF.trace_endpoint(trace) == new_endpoint
   end
 
   test "lex_sql/1" do
