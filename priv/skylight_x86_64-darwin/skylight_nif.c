@@ -277,6 +277,39 @@ static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_T
 }
 
 // Wraps:
+//   int sky_trace_uuid(sky_trace_t* trace, sky_buf_t* out);
+// in:
+//   trace_uuid(trace :: <resource>) :: binary
+static ERL_NIF_TERM trace_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  sky_buf_t uuid_buf;
+  MAYBE_RAISE_FFI(sky_trace_uuid(trace, &uuid_buf));
+
+  ErlNifBinary uuid_bin = BUF_TO_BINARY(uuid_buf);
+
+  return enif_make_binary(env, &uuid_bin);
+}
+
+// Wraps:
+//   int sky_trace_set_uuid(const sky_trace_t* trace, sky_buf_t uuid);
+// in:
+//   trace_set_uuid(trace :: <resource>, uuid :: binary) :: :ok | :error
+static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  ErlNifBinary uuid_bin;
+  enif_inspect_binary(env, argv[1], &uuid_bin);
+
+  sky_buf_t uuid_buf = BINARY_TO_BUF(uuid_bin);
+
+  int res = sky_trace_set_uuid(trace, uuid_buf);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
 //   int sky_lex_sql(sky_buf_t sql, sky_buf_t* title_buf, sky_buf_t* desc_buf);
 // in:
 //   lex_sql(sql :: binary) :: binary
@@ -340,6 +373,8 @@ static ErlNifFunc nif_funcs[] = {
   {"trace_start", 1, trace_start},
   {"trace_endpoint", 1, trace_endpoint},
   {"trace_set_endpoint", 2, trace_set_endpoint},
+  {"trace_uuid", 1, trace_uuid},
+  {"trace_set_uuid", 2, trace_set_uuid},
   {"lex_sql", 1, lex_sql}
 };
 

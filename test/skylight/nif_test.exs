@@ -65,6 +65,17 @@ defmodule Skylight.NIFTest do
     assert NIF.trace_endpoint(trace) == new_endpoint
   end
 
+  test "trace_uuid/1 and trace_set_uuid/2" do
+    uuid = UUID.uuid4()
+    new_uuid = UUID.uuid4()
+
+    trace = NIF.trace_new(100, uuid, "MyController#my_endpoint")
+
+    assert NIF.trace_uuid(trace) == uuid
+    assert :ok = NIF.trace_set_uuid(trace, new_uuid)
+    assert NIF.trace_uuid(trace) == new_uuid
+  end
+
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
     assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";

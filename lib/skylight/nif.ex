@@ -20,6 +20,8 @@ defmodule Skylight.NIF do
     {:trace_start, 1},
     {:trace_endpoint, 1},
     {:trace_set_endpoint, 2},
+    {:trace_uuid, 1},
+    {:trace_set_uuid, 2},
     {:lex_sql, 1},
   ]
 
