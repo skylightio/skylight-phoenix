@@ -11,10 +11,10 @@ defmodule Skylight.Mixfile do
   end
 
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :crypto]]
   end
 
   defp deps do
-    []
+    [{:uuid, "~> 1.1"}]
   end
 end
