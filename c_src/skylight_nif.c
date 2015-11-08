@@ -205,6 +205,22 @@ static ERL_NIF_TERM instrumenter_stop(ErlNifEnv *env, int argc, const ERL_NIF_TE
 }
 
 // Wraps:
+//   int sky_instrumenter_submit_trace(const sky_instrumenter_t* inst, sky_trace_t* trace);
+// in:
+//   instrumenter_submit_trace(inst :: <resource>, trace :: <resource>) :: :ok | :error
+static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  printf("About to submit trace...\n");
+
+  sky_instrumenter_t *instrumenter;
+  get_instrumenter(env, argv[0], &instrumenter);
+  sky_trace_t *trace;
+  get_trace(env, argv[1], &trace);
+
+  int res = sky_instrumenter_submit_trace(instrumenter, trace);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
 //   int sky_trace_new(uint64_t start, sky_buf_t uuid, sky_buf_t endpoint, sky_trace_t** out);
 // as
 //   trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
@@ -369,6 +385,7 @@ static ErlNifFunc nif_funcs[] = {
   {"instrumenter_new", 1, instrumenter_new},
   {"instrumenter_start", 1, instrumenter_start},
   {"instrumenter_stop", 1, instrumenter_stop},
+  {"instrumenter_submit_trace", 2, instrumenter_submit_trace},
   {"trace_new", 3, trace_new},
   {"trace_start", 1, trace_start},
   {"trace_endpoint", 1, trace_endpoint},

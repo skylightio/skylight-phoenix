@@ -76,6 +76,13 @@ defmodule Skylight.NIFTest do
     assert NIF.trace_uuid(trace) == new_uuid
   end
 
+  test "instrumenter_submit_trace/2" do
+    instrumenter = NIF.instrumenter_new(@bare_agent_env)
+    :ok = NIF.instrumenter_start(instrumenter)
+    trace = NIF.trace_new(100, UUID.uuid4(), "MyController#my_endpoint")
+    assert :ok = NIF.instrumenter_submit_trace(instrumenter, trace)
+  end
+
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
     assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
