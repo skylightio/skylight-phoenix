@@ -35,7 +35,6 @@ defmodule Skylight.NIF do
 
   defp nif_path() do
     Application.app_dir(:skylight, "priv")
-    |> Path.join("skylight_x86_64-darwin")
     |> Path.join("skylight_nif")
     |> String.to_char_list
   end

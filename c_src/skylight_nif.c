@@ -153,7 +153,7 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
   ERL_NIF_TERM head;
   ERL_NIF_TERM tail = erl_env;
 
-  for (int i = 0; i < envc; i++) {
+  for (unsigned int i = 0; i < envc; i++) {
     ErlNifBinary current_bin;
 
     // Replace `head` with the current element and `tail` with the new tail to
@@ -383,4 +383,4 @@ static ErlNifFunc nif_funcs[] = {
 // Defines the NIFs listed in `nif_funcs` in the module passed as the first
 // argument to this macro. The last four arguments are load/unload/reload hooks
 // called by Erlang.
-ERL_NIF_INIT(Elixir.Skylight.NIF, nif_funcs, &load, NULL, NULL, NULL);
+ERL_NIF_INIT(Elixir.Skylight.NIF, nif_funcs, &load, NULL, NULL, NULL)

@@ -4,7 +4,7 @@ defmodule Skylight.NIFTest do
 
   alias Skylight.NIF
 
-  @native_path Application.app_dir(:skylight, "priv") |> Path.join("skylight_x86_64-darwin")
+  @native_path File.cwd!() |> Path.join("c_src/skylight_x86_64-darwin")
   @skylightd_path Path.join(@native_path, "skylightd")
   @libskylight_path Path.join(@native_path, "libskylight.dylib")
 
