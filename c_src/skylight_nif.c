@@ -209,8 +209,6 @@ static ERL_NIF_TERM instrumenter_stop(ErlNifEnv *env, int argc, const ERL_NIF_TE
 // in:
 //   instrumenter_submit_trace(inst :: <resource>, trace :: <resource>) :: :ok | :error
 static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  printf("About to submit trace...\n");
-
   sky_instrumenter_t *instrumenter;
   get_instrumenter(env, argv[0], &instrumenter);
   sky_trace_t *trace;

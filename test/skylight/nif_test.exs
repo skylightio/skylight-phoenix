@@ -2,7 +2,7 @@ defmodule Skylight.NIFTest do
   use ExUnit.Case
   alias Skylight.TestHelpers
 
-  alias Skylight.NIF
+  import Skylight.NIF
 
   @native_path File.cwd!() |> Path.join("c_src/skylight_x86_64-darwin")
   @skylightd_path Path.join(@native_path, "skylightd")
@@ -21,74 +21,74 @@ defmodule Skylight.NIFTest do
 
   setup_all do
     :crypto.rand_bytes(10)
-    {:ok, :loaded} = NIF.load_libskylight(@libskylight_path)
+    {:ok, :loaded} = load_libskylight(@libskylight_path)
     :ok
   end
 
   setup do
-    instrumenter = NIF.instrumenter_new(@bare_agent_env)
-    :ok = NIF.instrumenter_start(instrumenter)
-
+    instrumenter = instrumenter_new(@bare_agent_env)
+    :ok = instrumenter_start(instrumenter)
     {:ok, %{instr: instrumenter}}
   end
 
   test "hrtime/0" do
-    hrtime = NIF.hrtime()
+    hrtime = hrtime()
     assert is_integer(hrtime)
     assert hrtime > 1_000_000_000_000
   end
 
   test "instrumenter_new/1, instrumenter_start/1, and instrumenter_stop/1" do
-    instrumenter = NIF.instrumenter_new(@bare_agent_env)
-    assert resource?(instrumenter, :instrumenter)
+    instrumenter = instrumenter_new(@bare_agent_env)
+    assert resource?(instrumenter)
 
-    assert NIF.instrumenter_start(instrumenter) ==:ok
-    assert NIF.instrumenter_stop(instrumenter) == :ok
+    assert instrumenter_start(instrumenter) ==:ok
+    assert instrumenter_stop(instrumenter) == :ok
   end
 
   test "trace_new/3" do
-    trace = NIF.trace_new(100, UUID.uuid4(), "MyController#my_route")
-    assert resource?(trace, :trace)
+    trace = trace_new(hrtime(), UUID.uuid4(), "MyController#my_route")
+    assert resource?(trace)
   end
 
   test "trace_start/1" do
-    trace = NIF.trace_new(100, UUID.uuid4(), "MyController#my_route")
-    assert is_integer(NIF.trace_start(trace))
+    started_at = hrtime()
+    trace = trace_new(started_at, UUID.uuid4(), "MyController#my_route")
+    assert trace_start(trace) == started_at
   end
 
   test "trace_endpoint/1 and trace_set_endpoint/2" do
     endpoint = "MyController#my_trace_endpoint_to_check"
     new_endpoint = "MyController#new_endpoint"
-    trace = NIF.trace_new(100, UUID.uuid4(), endpoint)
-    assert NIF.trace_endpoint(trace) == endpoint
-    assert :ok = NIF.trace_set_endpoint(trace, new_endpoint)
-    assert NIF.trace_endpoint(trace) == new_endpoint
+    trace = trace_new(hrtime(), UUID.uuid4(), endpoint)
+    assert trace_endpoint(trace) == endpoint
+    assert :ok = trace_set_endpoint(trace, new_endpoint)
+    assert trace_endpoint(trace) == new_endpoint
   end
 
   test "trace_uuid/1 and trace_set_uuid/2" do
     uuid = UUID.uuid4()
     new_uuid = UUID.uuid4()
 
-    trace = NIF.trace_new(100, uuid, "MyController#my_endpoint")
+    trace = trace_new(hrtime(), uuid, "MyController#my_endpoint")
 
-    assert NIF.trace_uuid(trace) == uuid
-    assert :ok = NIF.trace_set_uuid(trace, new_uuid)
-    assert NIF.trace_uuid(trace) == new_uuid
+    assert trace_uuid(trace) == uuid
+    assert :ok = trace_set_uuid(trace, new_uuid)
+    assert trace_uuid(trace) == new_uuid
   end
 
   test "instrumenter_submit_trace/2" do
-    instrumenter = NIF.instrumenter_new(@bare_agent_env)
-    :ok = NIF.instrumenter_start(instrumenter)
-    trace = NIF.trace_new(100, UUID.uuid4(), "MyController#my_endpoint")
-    assert :ok = NIF.instrumenter_submit_trace(instrumenter, trace)
+    instrumenter = instrumenter_new(@bare_agent_env)
+    :ok = instrumenter_start(instrumenter)
+    trace = trace_new(100, UUID.uuid4(), "MyController#my_endpoint")
+    assert :ok = instrumenter_submit_trace(instrumenter, trace)
   end
 
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
-    assert NIF.lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
+    assert lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
   end
 
   # For now, let's identify a resource as just an empty binary.
-  defp resource?("", _type), do: true
-  defp resource?(_, _type), do: false
+  defp resource?(""), do: true
+  defp resource?(_), do: false
 end
