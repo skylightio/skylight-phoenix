@@ -7,3 +7,7 @@ erl_crash.dump
 # C stuff
 *.so
 *.o
+
+# skylightd artifacts
+*.pid
+*.sock
