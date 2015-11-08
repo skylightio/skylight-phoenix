@@ -15,6 +15,8 @@ defmodule Skylight.Mixfile do
   end
 
   defp deps do
-    [{:uuid, "~> 1.1"}]
+    [{:uuid, "~> 1.1"},
+     {:plug, ">= 1.0.0", optional: true},
+     {:cowboy, ">= 1.0.0", optional: true}]
   end
 end
