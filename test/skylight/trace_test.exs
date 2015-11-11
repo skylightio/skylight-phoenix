@@ -12,7 +12,8 @@ defmodule Skylight.TraceTest do
   end
 
   test "implementation of Inspect.inspect/2" do
-    assert inspect(%Trace{}) == "#Skylight.Trace<a-trace>"
+    assert inspect(Trace.new("my_trace"))
+           =~ ~r/#Skylight\.Trace<uuid: .{36}, endpoint: "my_trace">/
   end
 
   test "new/1" do

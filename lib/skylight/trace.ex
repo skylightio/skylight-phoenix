@@ -46,8 +46,12 @@ defmodule Skylight.Trace do
   defimpl Inspect do
     import Inspect.Algebra
 
-    def inspect(_trace, _opts) do
-      concat ["#Skylight.Trace<", "a-trace", ">"]
+    def inspect(%Trace{} = trace, opts) do
+      concat ["#Skylight.Trace<",
+              "uuid: ", Skylight.Trace.get_uuid(trace),
+              ", ",
+              "endpoint: ", to_doc(Skylight.Trace.get_endpoint(trace), opts),
+              ">"]
     end
   end
 end
