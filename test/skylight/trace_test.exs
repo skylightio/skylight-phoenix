@@ -41,4 +41,14 @@ defmodule Skylight.TraceTest do
     assert :ok = Trace.put_uuid(trace, new_uuid)
     assert Trace.get_uuid(trace) == new_uuid
   end
+
+  test "instrument/2, set_span_title/3, set_span_desc/2 and mark_span_as_done/2" do
+    trace = Trace.new("my_trace")
+    handle = Trace.instrument(trace, "my category")
+    assert is_integer(handle)
+
+    assert :ok = Trace.set_span_title(trace, handle, "my title")
+    assert :ok = Trace.set_span_desc(trace, handle, "my desc")
+    assert :ok = Trace.mark_span_as_done(trace, handle)
+  end
 end
