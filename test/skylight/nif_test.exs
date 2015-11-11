@@ -21,7 +21,7 @@ defmodule Skylight.NIFTest do
 
   setup_all do
     :crypto.rand_bytes(10)
-    {:ok, :loaded} = load_libskylight(@libskylight_path)
+    {:ok, _} = load_libskylight(@libskylight_path)
     :ok
   end
 
