@@ -17,6 +17,7 @@ defmodule Skylight.NIF do
     {:instrumenter_start, 1},
     {:instrumenter_stop, 1},
     {:instrumenter_submit_trace, 2},
+    {:instrumenter_track_desc, 3},
     {:trace_new, 3},
     {:trace_start, 1},
     {:trace_endpoint, 1},

@@ -46,6 +46,8 @@ ERL_NIF_TERM atom_ok;
 ERL_NIF_TERM atom_loaded;
 ERL_NIF_TERM atom_already_loaded;
 ERL_NIF_TERM atom_error;
+ERL_NIF_TERM atom_true;
+ERL_NIF_TERM atom_false;
 
 // Resource type for Skylight instrumenters. It's initialized in the `load`
 // function.
@@ -74,6 +76,8 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   atom_loaded = enif_make_atom(env, "loaded");
   atom_already_loaded = enif_make_atom(env, "already_loaded");
   atom_error = enif_make_atom(env, "error");
+  atom_true = enif_make_atom(env, "true");
+  atom_false = enif_make_atom(env, "false");
 
   // Open the resource types for the instrumenter and trace.
   INSTRUMENTER_RES_TYPE = enif_open_resource_type(env,
@@ -231,6 +235,33 @@ static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ER
 
   int res = sky_instrumenter_submit_trace(instrumenter, trace);
   return FFI_RESULT(res);
+}
+
+// Wraps:
+//   int sky_instrumenter_track_desc(sky_instrumenter_t* inst, sky_buf_t endpoint, sky_buf_t desc, int* out);
+// in:
+//   instrumenter_track_desc(instrumenter :: <resource>, endpoint :: binary, desc :: binary) :: boolean
+static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  sky_instrumenter_t *instrumenter;
+  get_instrumenter(env, argv[0], &instrumenter);
+
+  ErlNifBinary endpoint_bin, desc_bin;
+  enif_inspect_binary(env, argv[1], &endpoint_bin);
+  enif_inspect_binary(env, argv[2], &desc_bin);
+
+  sky_buf_t endpoint_buf = BINARY_TO_BUF(endpoint_bin);
+  sky_buf_t desc_buf = BINARY_TO_BUF(desc_bin);
+
+  int tracked = 0;
+  int res = sky_instrumenter_track_desc(instrumenter, endpoint_buf, desc_buf, &tracked);
+
+  if (res != 0) {
+    ERL_RAISE("call to native function failed");
+  }
+
+  return tracked ? atom_true : atom_false;
 }
 
 // Wraps:
@@ -501,6 +532,7 @@ static ErlNifFunc nif_funcs[] = {
   {"instrumenter_start", 1, instrumenter_start},
   {"instrumenter_stop", 1, instrumenter_stop},
   {"instrumenter_submit_trace", 2, instrumenter_submit_trace},
+  {"instrumenter_track_desc", 3, instrumenter_track_desc},
   {"trace_new", 3, trace_new},
   {"trace_start", 1, trace_start},
   {"trace_endpoint", 1, trace_endpoint},

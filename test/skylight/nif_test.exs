@@ -45,6 +45,12 @@ defmodule Skylight.NIFTest do
     assert instrumenter_stop(instrumenter) == :ok
   end
 
+  test "instrumenter_track_desc/3" do
+    instrumenter = instrumenter_new(@bare_agent_env)
+    tracked = instrumenter_track_desc(instrumenter, "my_endpoint", "my_desc")
+    assert tracked
+  end
+
   test "trace_new/3" do
     trace = trace_new(hrtime(), UUID.uuid4(), "MyController#my_route")
     assert resource?(trace)
