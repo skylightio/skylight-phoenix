@@ -351,6 +351,94 @@ static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 }
 
 // Wraps:
+//   int sky_trace_instrument(const sky_trace_t* trace, uint64_t time, sky_buf_t category, uint32_t* out);
+// in:
+//   trace_instrument(trace :: <resource>, time :: non_neg_integer, category :: binary) :: non_neg_integer
+static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  uint64_t time;
+  enif_get_uint64(env, argv[1], (ErlNifUInt64 *) &time);
+
+  ErlNifBinary category_bin;
+  enif_inspect_binary(env, argv[2], &category_bin);
+
+  sky_buf_t category_buf = BINARY_TO_BUF(category_bin);
+
+  uint32_t out;
+  MAYBE_RAISE_FFI(sky_trace_instrument(trace, time, category_buf, &out));
+
+  return enif_make_uint(env, (unsigned int) out);
+}
+
+// Wraps:
+//   int sky_trace_span_set_title(const sky_trace_t* trace, uint32_t handle, sky_buf_t title);
+// in:
+//   trace_span_set_title(trace :: <resource>, handle :: non_neg_integer, title :: binary) :: :ok | :error
+static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  uint32_t handle;
+  enif_get_uint(env, argv[1], (unsigned int *) &handle);
+
+  ErlNifBinary title_bin;
+  enif_inspect_binary(env, argv[2], &title_bin);
+
+  sky_buf_t title_buf = BINARY_TO_BUF(title_bin);
+
+  int res = sky_trace_span_set_title(trace, handle, title_buf);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
+//   int sky_trace_span_set_desc(const sky_trace_t* trace, uint32_t handle, sky_buf_t desc);
+// in:
+//   trace_span_set_desc(trace :: <resource>, handle :: non_neg_integer, desc :: binary) :: :ok | :error
+static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  uint32_t handle;
+  enif_get_uint(env, argv[1], (unsigned int *) &handle);
+
+  ErlNifBinary desc_bin;
+  enif_inspect_binary(env, argv[2], &desc_bin);
+
+  sky_buf_t desc_buf = BINARY_TO_BUF(desc_bin);
+
+  int res = sky_trace_span_set_desc(trace, handle, desc_buf);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
+//   int sky_trace_span_done(const sky_trace_t* trace, uint32_t handle, uint64_t time);
+// in:
+//   trace_span_done(trace :: <resource>, handle :: non_neg_integer, time :: non_neg_integer) :: :ok | :error
+static ERL_NIF_TERM trace_span_done(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  sky_trace_t *trace;
+  get_trace(env, argv[0], &trace);
+
+  uint32_t handle;
+  enif_get_uint(env, argv[1], (unsigned int *) &handle);
+
+  uint32_t time;
+  enif_get_uint(env, argv[2], (unsigned int *) &time);
+
+  int res = sky_trace_span_done(trace, handle, time);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
 //   int sky_lex_sql(sky_buf_t sql, sky_buf_t* title_buf, sky_buf_t* desc_buf);
 // in:
 //   lex_sql(sql :: binary) :: binary
@@ -419,6 +507,10 @@ static ErlNifFunc nif_funcs[] = {
   {"trace_set_endpoint", 2, trace_set_endpoint},
   {"trace_uuid", 1, trace_uuid},
   {"trace_set_uuid", 2, trace_set_uuid},
+  {"trace_instrument", 3, trace_instrument},
+  {"trace_span_set_title", 3, trace_span_set_title},
+  {"trace_span_set_desc", 3, trace_span_set_desc},
+  {"trace_span_done", 3, trace_span_done},
   {"lex_sql", 1, lex_sql}
 };
 

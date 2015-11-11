@@ -83,6 +83,18 @@ defmodule Skylight.NIFTest do
     assert :ok = instrumenter_submit_trace(instrumenter, trace)
   end
 
+  test "trace_instrument/3, trace_span_set_(title|desc)/3, trace_span_done/3" do
+    trace = trace_new(hrtime(), UUID.uuid4(), "my_endpoint")
+
+    handle = trace_instrument(trace, hrtime(), "my_category")
+    assert is_integer(handle)
+
+    assert :ok = trace_span_set_title(trace, handle, "my title")
+    assert :ok = trace_span_set_desc(trace, handle, "my desc")
+
+    assert :ok = trace_span_done(trace, handle, hrtime())
+  end
+
   test "lex_sql/1" do
     sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
     assert lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
