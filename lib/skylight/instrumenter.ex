@@ -41,7 +41,7 @@ defmodule Skylight.Instrumenter do
   defimpl Inspect do
     import Inspect.Algebra
 
-    def inspect(inst, opts) do
+    def inspect(_inst, _opts) do
       concat ["#Skylight.Instrumenter<", "an-instrumenter", ">"]
     end
   end
