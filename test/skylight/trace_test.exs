@@ -4,7 +4,6 @@ defmodule Skylight.TraceTest do
   alias Skylight.Trace
 
   @native_path File.cwd!() |> Path.join("c_src/skylight_x86_64-darwin")
-  @skylightd_path Path.join(@native_path, "skylightd")
   @libskylight_path Path.join(@native_path, "libskylight.dylib")
 
   setup_all do
