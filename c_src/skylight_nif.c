@@ -86,19 +86,11 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   atom_true = enif_make_atom(env, "true");
   atom_false = enif_make_atom(env, "false");
 
-  // Open the resource types for the instrumenter and trace.
-  INSTRUMENTER_RES_TYPE = enif_open_resource_type(env,
-                                                  "Elixir.Skylight.NIF",
-                                                  "instrumenter",
-                                                  instrumenter_res_destructor,
-                                                  ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER,
-                                                  NULL);
-  TRACE_RES_TYPE = enif_open_resource_type(env,
-                                           "Elixir.Skylight.NIF",
-                                           "trace",
-                                           trace_res_destructor,
-                                           ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER,
-                                           NULL);
+  int res_flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
+  INSTRUMENTER_RES_TYPE =
+    enif_open_resource_type(env, NULL, "instrumenter", instrumenter_res_destructor, res_flags, NULL);
+  TRACE_RES_TYPE =
+    enif_open_resource_type(env, NULL, "trace", trace_res_destructor, res_flags, NULL);
 
   return 0;
 }
