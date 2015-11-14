@@ -37,6 +37,13 @@
     ERL_RAISE("libskylight not loaded");        \
   }
 
+#define CHECK_TYPE(arg, type)                   \
+  do {                                          \
+    if (!enif_is_##type(env, arg))  {           \
+      return enif_make_badarg(env);             \
+    }                                           \
+  } while (0)
+
 // Helper functions headers.
 void get_instrumenter(ErlNifEnv *, ERL_NIF_TERM, sky_instrumenter_t **);
 void get_trace(ErlNifEnv *, ERL_NIF_TERM, sky_trace_t **);
@@ -98,13 +105,16 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
 
 // Wraps:
 //   int sky_load_libskylight(const char* filename);
-// from skylight_dlopen.c.
+// in:
+//   load_libskylight(filename :: binary) :: {:ok, :loaded | :already_loaded} | :error
 static ERL_NIF_TERM load_libskylight(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // Return early if the lib was already loaded (we're checking for the
   // existence of the sky_hrtime function here).
   if (sky_hrtime != 0) {
     return enif_make_tuple2(env, atom_ok, atom_already_loaded);
   }
+
+  CHECK_TYPE(argv[0], binary);
 
   ErlNifBinary path_bin;
   enif_inspect_binary(env, argv[0], &path_bin);
@@ -152,6 +162,8 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
 
   ERL_NIF_TERM erl_env = argv[0];
   sky_buf_t sky_env[256];
+
+  CHECK_TYPE(argv[0], list);
 
   // Get the length of the erl_env list passed as the argument to the NIF.
   unsigned int envc;
@@ -244,6 +256,9 @@ static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ER
 static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
+  CHECK_TYPE(argv[1], binary);
+  CHECK_TYPE(argv[2], binary);
+
   sky_instrumenter_t *instrumenter;
   get_instrumenter(env, argv[0], &instrumenter);
 
@@ -270,6 +285,10 @@ static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_
 //   trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
 static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  CHECK_TYPE(argv[0], number);
+  CHECK_TYPE(argv[1], binary);
+  CHECK_TYPE(argv[2], binary);
 
   ErlNifUInt64 start;
   enif_get_uint64(env, argv[0], &start);
@@ -332,6 +351,8 @@ static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
+  CHECK_TYPE(argv[1], binary);
+
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
 
@@ -369,6 +390,8 @@ static ERL_NIF_TERM trace_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
 static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
+  CHECK_TYPE(argv[1], binary);
+
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
 
@@ -387,6 +410,9 @@ static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 //   trace_instrument(trace :: <resource>, time :: non_neg_integer, category :: binary) :: non_neg_integer
 static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  CHECK_TYPE(argv[1], number);
+  CHECK_TYPE(argv[2], binary);
 
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
@@ -412,6 +438,9 @@ static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TER
 static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
+  CHECK_TYPE(argv[1], number);
+  CHECK_TYPE(argv[2], binary);
+
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
 
@@ -433,6 +462,9 @@ static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF
 //   trace_span_set_desc(trace :: <resource>, handle :: non_neg_integer, desc :: binary) :: :ok | :error
 static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  CHECK_TYPE(argv[1], number);
+  CHECK_TYPE(argv[2], binary);
 
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
@@ -456,6 +488,9 @@ static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_
 static ERL_NIF_TERM trace_span_done(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
+  CHECK_TYPE(argv[1], number);
+  CHECK_TYPE(argv[2], number);
+
   sky_trace_t *trace;
   get_trace(env, argv[0], &trace);
 
@@ -475,6 +510,8 @@ static ERL_NIF_TERM trace_span_done(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 //   lex_sql(sql :: binary) :: binary
 static ERL_NIF_TERM lex_sql(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+
+  CHECK_TYPE(argv[0], binary);
 
   ErlNifBinary sql_bin;
   enif_inspect_binary(env, argv[0], &sql_bin);
@@ -549,6 +586,10 @@ static ErlNifFunc nif_funcs[] = {
 
 // Where the magic happens.
 // Defines the NIFs listed in `nif_funcs` in the module passed as the first
-// argument to this macro. The last four arguments are load/unload/reload hooks
-// called by Erlang.
+// argument to this macro. The last four arguments are load/unload hooks
+// called by Erlang; they're in this order:
+// - load
+// - upgrade
+// - unload
+// - reload (deprecated)
 ERL_NIF_INIT(Elixir.Skylight.NIF, nif_funcs, &load, NULL, NULL, NULL)
