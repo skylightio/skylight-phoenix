@@ -86,7 +86,11 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   atom_true = enif_make_atom(env, "true");
   atom_false = enif_make_atom(env, "false");
 
+  // ERL_NIF_RT_CREATE creates a new resource type, while ERL_NIF_RT_TAKEOVER
+  // opens an existing resource type and takes ownership of all the instances of
+  // that resource type.
   int res_flags = ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER;
+
   INSTRUMENTER_RES_TYPE =
     enif_open_resource_type(env, NULL, "instrumenter", instrumenter_res_destructor, res_flags, NULL);
   TRACE_RES_TYPE =
