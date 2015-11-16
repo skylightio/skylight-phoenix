@@ -11,7 +11,8 @@ defmodule Skylight.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :crypto]]
+    [applications: [:logger, :crypto],
+     mod: {Skylight, []}]
   end
 
   defp deps do

@@ -3,14 +3,6 @@ defmodule Skylight.TraceTest do
 
   alias Skylight.Trace
 
-  @native_path File.cwd!() |> Path.join("c_src/skylight_x86_64-darwin")
-  @libskylight_path Path.join(@native_path, "libskylight.dylib")
-
-  setup_all do
-    {:ok, _} = Skylight.NIF.load_libskylight(@libskylight_path)
-    :ok
-  end
-
   test "implementation of Inspect.inspect/2" do
     assert inspect(Trace.new("my_trace"))
            =~ ~r/#Skylight\.Trace<uuid: .{36}, endpoint: "my_trace">/

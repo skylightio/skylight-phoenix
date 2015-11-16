@@ -4,31 +4,27 @@ defmodule Skylight.NIFTest do
 
   import Skylight.NIF
 
-  @native_path File.cwd!() |> Path.join("c_src/skylight_x86_64-darwin")
-  @skylightd_path Path.join(@native_path, "skylightd")
-  @libskylight_path Path.join(@native_path, "libskylight.dylib")
+  @priv Application.app_dir(:skylight, "priv")
 
   @bare_agent_env [
     "SKYLIGHT_AUTHENTICATION", TestHelpers.auth_token(),
     "SKYLIGHT_VERSION", "0.8.1",
     "SKYLIGHT_LAZY_START", "false",
-    "SKYLIGHT_DAEMON_EXEC_PATH", @skylightd_path,
-    "SKYLIGHT_DAEMON_LIB_PATH", Path.dirname(@libskylight_path),
+    "SKYLIGHT_DAEMON_EXEC_PATH", Path.join(@priv, "skylightd"),
+    "SKYLIGHT_DAEMON_LIB_PATH", @priv,
     "SKYLIGHT_AUTH_URL", "https://auth.skylight.io/agent",
     "SKYLIGHT_VALIDATE_AUTHENTICATION", "false",
-    "SKYLIGHT_DAEMON_READ_TIMEOUT", "5s",
   ]
 
   setup_all do
-    :crypto.rand_bytes(10)
-    {:ok, _} = load_libskylight(@libskylight_path)
-    :ok
-  end
-
-  setup do
     instrumenter = instrumenter_new(@bare_agent_env)
     :ok = instrumenter_start(instrumenter)
-    {:ok, %{instr: instrumenter}}
+
+    on_exit fn ->
+      :ok = instrumenter_stop(instrumenter)
+    end
+
+    {:ok, %{inst: instrumenter}}
   end
 
   test "hrtime/0" do
@@ -37,18 +33,8 @@ defmodule Skylight.NIFTest do
     assert hrtime > 1_000_000_000_000
   end
 
-  test "instrumenter_new/1, instrumenter_start/1, and instrumenter_stop/1" do
-    instrumenter = instrumenter_new(@bare_agent_env)
-    assert resource?(instrumenter)
-
-    assert instrumenter_start(instrumenter) ==:ok
-    assert instrumenter_stop(instrumenter) == :ok
-  end
-
-  test "instrumenter_track_desc/3" do
-    instrumenter = instrumenter_new(@bare_agent_env)
-    tracked = instrumenter_track_desc(instrumenter, "my_endpoint", "my_desc")
-    assert tracked
+  test "instrumenter_track_desc/3", %{inst: instrumenter} do
+    assert instrumenter_track_desc(instrumenter, "my_endpoint", "my_desc")
   end
 
   test "trace_new/3" do
@@ -65,7 +51,9 @@ defmodule Skylight.NIFTest do
   test "trace_endpoint/1 and trace_set_endpoint/2" do
     endpoint = "MyController#my_trace_endpoint_to_check"
     new_endpoint = "MyController#new_endpoint"
+
     trace = trace_new(hrtime(), UUID.uuid4(), endpoint)
+
     assert trace_endpoint(trace) == endpoint
     assert :ok = trace_set_endpoint(trace, new_endpoint)
     assert trace_endpoint(trace) == new_endpoint
@@ -82,9 +70,7 @@ defmodule Skylight.NIFTest do
     assert trace_uuid(trace) == new_uuid
   end
 
-  test "instrumenter_submit_trace/2" do
-    instrumenter = instrumenter_new(@bare_agent_env)
-    :ok = instrumenter_start(instrumenter)
+  test "instrumenter_submit_trace/2", %{inst: instrumenter} do
     trace = trace_new(100, UUID.uuid4(), "MyController#my_endpoint")
     assert :ok = instrumenter_submit_trace(instrumenter, trace)
   end

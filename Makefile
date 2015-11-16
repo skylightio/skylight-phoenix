@@ -21,7 +21,7 @@ endif
 
 all: priv/skylight_nif.so
 
-priv/skylight_nif.so: c_src/skylight_x86_64-darwin/skylight_dlopen.o
+priv/skylight_nif.so: c_src/skylight_dlopen.o
 	$(CC) $(FLAGS) $(LDFLAGS) $< c_src/skylight_nif.c -o $@
 
 clean:
