@@ -65,12 +65,17 @@ ErlNifResourceType *TRACE_RES_TYPE;
 
 // Destructor for `INSTRUMENTER_RES_TYPE` resources.
 void instrumenter_res_destructor(ErlNifEnv *env, void *obj) {
-  printf("Instrumenter resource being destroyed!\n");
+  // Not actually freeing this right now because of the same reasons discussed
+  // in trace_res_destructor().
 }
 
 // Destructor for `TRACE_RES_TYPE` resources.
 void trace_res_destructor(ErlNifEnv *env, void *obj) {
-  printf("Trace resource being destroyed!\n");
+  // We'd love to free our trace now, but calling sky_trace_free() may fail
+  // because the trace may have already been freed by functions like
+  // sky_instrumenter_submit_trace(). I'm not sure what to do yet :\ TBH, I'm
+  // not sure we're meant to free stuff here (or maybe let Rust take care of
+  // it?).
 }
 
 // Load hook. Called by Erlang when this NIF library is loaded and there is no
@@ -184,19 +189,18 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
     sky_env[i] = BINARY_TO_BUF(current_bin);
   }
 
-  // Let's load the instrumenter into the `instrumenter` variable.
-  sky_instrumenter_t *instrumenter;
-  MAYBE_RAISE_FFI(sky_instrumenter_new(sky_env, (int) envc, &instrumenter));
-
-  sky_instrumenter_t **resource =
+  // `resource` is now a pointer to a `sky_instrumenter_t *` (for which we
+  // allocated the memory).
+  sky_instrumenter_t **inst_res =
     enif_alloc_resource(INSTRUMENTER_RES_TYPE, sizeof(sky_instrumenter_t *));
+  // We can already create the Erlang term for the resource and release the
+  // resource, giving its ownership to Erlang.
+  ERL_NIF_TERM term = enif_make_resource(env, inst_res);
+  enif_release_resource(inst_res);
 
-  memcpy((void *) resource, (void *) &instrumenter, sizeof(sky_instrumenter_t *));
-
-  ERL_NIF_TERM term = enif_make_resource(env, resource);
-
-  // Not sure if this is necessary yet:
-  // enif_release_resource(resource);
+  // We're now loading the new instrumenter (which is a `sky_instrumenter_t *`)
+  // into the memory pointed by `inst_res`.
+  MAYBE_RAISE_FFI(sky_instrumenter_new(sky_env, (int) envc, inst_res));
 
   return term;
 }
@@ -241,7 +245,7 @@ static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ER
   sky_trace_t *trace;
   get_trace(env, argv[1], &trace);
 
-  int res = sky_instrumenter_submit_trace(instrumenter, trace);
+  int res = sky_instrumenter_submit_trace((const sky_instrumenter_t *) instrumenter, trace);
   return FFI_RESULT(res);
 }
 
@@ -281,7 +285,6 @@ static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_
 //   trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
 static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
-
   CHECK_TYPE(argv[0], number);
   CHECK_TYPE(argv[1], binary);
   CHECK_TYPE(argv[2], binary);
@@ -292,16 +295,20 @@ static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
   enif_inspect_binary(env, argv[1], &uuid_bin);
   enif_inspect_binary(env, argv[2], &endpoint_bin);
 
-  sky_buf_t uuid_buf = BINARY_TO_BUF(uuid_bin);
-  sky_buf_t endpoint_buf = BINARY_TO_BUF(endpoint_bin);
+  // We allocate the space for a trace resource, which is just a pointer to a
+  // `sky_trace_t`.
+  sky_trace_t **trace_res = enif_alloc_resource(TRACE_RES_TYPE, sizeof(sky_trace_t *));
+  // We then immediately create the Erlang resource...
+  ERL_NIF_TERM term = enif_make_resource(env, trace_res);
+  // ...and immediately release the resource, transferring its ownership to
+  // Erlang. It will be freed when garbage-collected by Erlang.
+  enif_release_resource(trace_res);
 
-  sky_trace_t *trace;
-  MAYBE_RAISE_FFI(sky_trace_new((uint64_t) start, uuid_buf, endpoint_buf, &trace));
-
-  sky_trace_t **resource = enif_alloc_resource(TRACE_RES_TYPE, sizeof(sky_trace_t *));
-  memcpy((void *) resource, (void *) &trace, sizeof(sky_trace_t *));
-
-  ERL_NIF_TERM term = enif_make_resource(env, resource);
+  // Now, we can fill the memory pointed by the resource.
+  MAYBE_RAISE_FFI(sky_trace_new((uint64_t) start,
+                                BINARY_TO_BUF(uuid_bin),
+                                BINARY_TO_BUF(endpoint_bin),
+                                trace_res));
 
   return term;
 }
@@ -551,9 +558,9 @@ void get_instrumenter(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_instrumente
 }
 
 void get_trace(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_trace_t **trace) {
-  sky_trace_t **resource;
-  enif_get_resource(env, resource_arg, TRACE_RES_TYPE, (void *) &resource);
-  *trace = *resource;
+  sky_trace_t **trace_res;
+  enif_get_resource(env, resource_arg, TRACE_RES_TYPE, (void **) &trace_res);
+  *trace = *trace_res;
 }
 
 
