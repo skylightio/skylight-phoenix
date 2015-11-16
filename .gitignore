@@ -12,3 +12,6 @@ erl_crash.dump
 *.pid
 *.sock
 /doc
+/c_src/skylight_dlopen*
+/priv/skylightd
+/priv/libskylight.dylib
