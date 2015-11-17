@@ -41,8 +41,15 @@ defmodule Skylight.Instrumenter do
   defimpl Inspect do
     import Inspect.Algebra
 
-    def inspect(_inst, _opts) do
-      concat ["#Skylight.Instrumenter<", "an-instrumenter", ">"]
+    def inspect(inst, _opts) do
+      concat ["#Skylight.Instrumenter<", hash(inst), ">"]
+    end
+
+    defp hash(inst) do
+      inst
+      |> :erlang.phash2()
+      |> :binary.encode_unsigned()
+      |> Base.encode16(case: :lower)
     end
   end
 end

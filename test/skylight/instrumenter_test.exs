@@ -18,7 +18,7 @@ defmodule Skylight.InstrumenterTest do
     }
 
   test "implementation of Inspect.inspect/2" do
-    assert inspect(%Instrumenter{}) == "#Skylight.Instrumenter<an-instrumenter>"
+    assert inspect(%Instrumenter{}) =~ ~r/#Skylight\.Instrumenter<[0-9a-f]+>/
   end
 
   test "new/1, start/1 and stop/1" do
