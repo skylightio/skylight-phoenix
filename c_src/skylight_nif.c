@@ -1,27 +1,12 @@
+#include <stdio.h>
 #include <string.h>
 #include "erl_nif.h"
 #include "skylight_dlopen.h"
-
-#include <stdio.h>
 
 // Bunch of macros.
 
 // Raises an Erlang exception with `msg` as the reason (as an Erlang char list).
 #define ERL_RAISE(msg) return enif_raise_exception(env, enif_make_string(env, (msg), ERL_NIF_LATIN1))
-
-// Converts an Erlang binary (`bin`) to a `sky_buf_t` buffer struct.
-#define BINARY_TO_BUF(bin)                      \
-  (sky_buf_t) {                                 \
-    .data = bin.data,                           \
-    .len = bin.size,                            \
-  }
-
-// Converts a `sky_buf_t` buffer to an Erlang binary (`ErlNifBinary`) struct.
-#define BUF_TO_BINARY(buf) \
-  (ErlNifBinary) {         \
-    .data = buf.data,      \
-    .size = buf.len,       \
-  }
 
 // Returns `ok` if `res` is 0 (success), `error` otherwise.
 #define FFI_RESULT(res) ((res) == 0) ? atom_ok : atom_error
@@ -44,9 +29,13 @@
     }                                           \
   } while (0)
 
-// Helper functions headers.
+
+// Helper function headers.
+sky_buf_t bin2buf(ErlNifBinary bin);
+ErlNifBinary buf2bin(sky_buf_t buf);
 void get_instrumenter(ErlNifEnv *, ERL_NIF_TERM, sky_instrumenter_t **);
 void get_trace(ErlNifEnv *, ERL_NIF_TERM, sky_trace_t **);
+
 
 // Global atoms to be used throughout the functions.
 ERL_NIF_TERM atom_ok;
@@ -186,7 +175,7 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
     // reuse in the next iteration.
     enif_get_list_cell(env, tail, &head, &tail);
     enif_inspect_binary(env, head, &current_bin);
-    sky_env[i] = BINARY_TO_BUF(current_bin);
+    sky_env[i] = bin2buf(current_bin);
   }
 
   // `resource` is now a pointer to a `sky_instrumenter_t *` (for which we
@@ -266,8 +255,8 @@ static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_
   enif_inspect_binary(env, argv[1], &endpoint_bin);
   enif_inspect_binary(env, argv[2], &desc_bin);
 
-  sky_buf_t endpoint_buf = BINARY_TO_BUF(endpoint_bin);
-  sky_buf_t desc_buf = BINARY_TO_BUF(desc_bin);
+  sky_buf_t endpoint_buf = bin2buf(endpoint_bin);
+  sky_buf_t desc_buf = bin2buf(desc_bin);
 
   int tracked = 0;
   int res = sky_instrumenter_track_desc(instrumenter, endpoint_buf, desc_buf, &tracked);
@@ -306,8 +295,8 @@ static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 
   // Now, we can fill the memory pointed by the resource.
   MAYBE_RAISE_FFI(sky_trace_new((uint64_t) start,
-                                BINARY_TO_BUF(uuid_bin),
-                                BINARY_TO_BUF(endpoint_bin),
+                                bin2buf(uuid_bin),
+                                bin2buf(endpoint_bin),
                                 trace_res));
 
   return term;
@@ -342,7 +331,7 @@ static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
   sky_buf_t endpoint_buf;
   MAYBE_RAISE_FFI(sky_trace_endpoint(trace, &endpoint_buf));
 
-  ErlNifBinary endpoint_bin = BUF_TO_BINARY(endpoint_buf);
+  ErlNifBinary endpoint_bin = buf2bin(endpoint_buf);
 
   return enif_make_binary(env, &endpoint_bin);
 }
@@ -362,7 +351,7 @@ static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_T
   ErlNifBinary endpoint_bin;
   enif_inspect_binary(env, argv[1], &endpoint_bin);
 
-  sky_buf_t endpoint_buf = BINARY_TO_BUF(endpoint_bin);
+  sky_buf_t endpoint_buf = bin2buf(endpoint_bin);
 
   int res = sky_trace_set_endpoint(trace, endpoint_buf);
   return FFI_RESULT(res);
@@ -381,7 +370,7 @@ static ERL_NIF_TERM trace_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
   sky_buf_t uuid_buf;
   MAYBE_RAISE_FFI(sky_trace_uuid(trace, &uuid_buf));
 
-  ErlNifBinary uuid_bin = BUF_TO_BINARY(uuid_buf);
+  ErlNifBinary uuid_bin = buf2bin(uuid_buf);
 
   return enif_make_binary(env, &uuid_bin);
 }
@@ -401,7 +390,7 @@ static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
   ErlNifBinary uuid_bin;
   enif_inspect_binary(env, argv[1], &uuid_bin);
 
-  sky_buf_t uuid_buf = BINARY_TO_BUF(uuid_bin);
+  sky_buf_t uuid_buf = bin2buf(uuid_bin);
 
   int res = sky_trace_set_uuid(trace, uuid_buf);
   return FFI_RESULT(res);
@@ -426,7 +415,7 @@ static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TER
   ErlNifBinary category_bin;
   enif_inspect_binary(env, argv[2], &category_bin);
 
-  sky_buf_t category_buf = BINARY_TO_BUF(category_bin);
+  sky_buf_t category_buf = bin2buf(category_bin);
 
   uint32_t out;
   MAYBE_RAISE_FFI(sky_trace_instrument(trace, time, category_buf, &out));
@@ -453,7 +442,7 @@ static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF
   ErlNifBinary title_bin;
   enif_inspect_binary(env, argv[2], &title_bin);
 
-  sky_buf_t title_buf = BINARY_TO_BUF(title_bin);
+  sky_buf_t title_buf = bin2buf(title_bin);
 
   int res = sky_trace_span_set_title(trace, handle, title_buf);
   return FFI_RESULT(res);
@@ -478,7 +467,7 @@ static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_
   ErlNifBinary desc_bin;
   enif_inspect_binary(env, argv[2], &desc_bin);
 
-  sky_buf_t desc_buf = BINARY_TO_BUF(desc_bin);
+  sky_buf_t desc_buf = bin2buf(desc_bin);
 
   int res = sky_trace_span_set_desc(trace, handle, desc_buf);
   return FFI_RESULT(res);
@@ -524,7 +513,7 @@ static ERL_NIF_TERM lex_sql(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
   sky_buf_t statement;
   uint8_t title_store[128];
 
-  sql = BINARY_TO_BUF(sql_bin);
+  sql = bin2buf(sql_bin);
 
   title = (sky_buf_t) {
     .data = title_store,
@@ -550,6 +539,20 @@ static ERL_NIF_TERM lex_sql(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 
 // Helper functions.
+
+sky_buf_t bin2buf(ErlNifBinary bin) {
+  return (sky_buf_t) {
+    .data = bin.data,
+    .len = bin.size,
+  };
+}
+
+ErlNifBinary buf2bin(sky_buf_t buf) {
+  return (ErlNifBinary) {
+    .data = buf.data,
+    .size = buf.len,
+  };
+}
 
 void get_instrumenter(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_instrumenter_t **instrumenter) {
   sky_instrumenter_t **resource;
