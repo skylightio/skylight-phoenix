@@ -12,6 +12,7 @@ defmodule Skylight.NIFTest do
     "SKYLIGHT_LAZY_START", "false",
     "SKYLIGHT_DAEMON_EXEC_PATH", Path.join(@priv, "skylightd"),
     "SKYLIGHT_DAEMON_LIB_PATH", @priv,
+    "SKYLIGHT_SOCKDIR_PATH", "/tmp",
     "SKYLIGHT_AUTH_URL", "https://auth.skylight.io/agent",
     "SKYLIGHT_VALIDATE_AUTHENTICATION", "false",
   ]
