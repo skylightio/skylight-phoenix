@@ -12,15 +12,19 @@
 #define FFI_RESULT(res) ((res) == 0) ? atom_ok : atom_error
 
 // Raises if the native function returns non-0.
-#define MAYBE_RAISE_FFI(ffi_call)                 \
-  if ((ffi_call) != 0) {                          \
-    ERL_RAISE("call to native function failed");  \
-  }
+#define MAYBE_RAISE_FFI(ffi_call)                   \
+  do {                                              \
+    if ((ffi_call) != 0) {                          \
+      ERL_RAISE("call to native function failed");  \
+    }                                               \
+  } while (0)
 
 #define RAISE_IF_LIBSKYLIGHT_NOT_LOADED()       \
-  if (sky_hrtime == 0) {                        \
-    ERL_RAISE("libskylight not loaded");        \
-  }
+  do {                                          \
+    if (sky_hrtime == 0) {                      \
+      ERL_RAISE("libskylight not loaded");      \
+    }                                           \
+  } while (0)
 
 #define CHECK_TYPE(arg, type)                   \
   do {                                          \
