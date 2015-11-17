@@ -58,8 +58,8 @@ ErlNifResourceType *TRACE_RES_TYPE;
 
 // Destructor for `INSTRUMENTER_RES_TYPE` resources.
 void instrumenter_res_destructor(ErlNifEnv *env, void *obj) {
-  // Not actually freeing this right now because of the same reasons discussed
-  // in trace_res_destructor().
+  sky_instrumenter_t **inst_res = obj;
+  sky_instrumenter_free(*inst_res);
 }
 
 // Destructor for `TRACE_RES_TYPE` resources.
