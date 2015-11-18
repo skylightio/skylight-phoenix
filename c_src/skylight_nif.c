@@ -64,11 +64,22 @@ void instrumenter_res_destructor(ErlNifEnv *env, void *obj) {
 
 // Destructor for `TRACE_RES_TYPE` resources.
 void trace_res_destructor(ErlNifEnv *env, void *obj) {
-  // We'd love to free our trace now, but calling sky_trace_free() may fail
-  // because the trace may have already been freed by functions like
-  // sky_instrumenter_submit_trace(). I'm not sure what to do yet :\ TBH, I'm
-  // not sure we're meant to free stuff here (or maybe let Rust take care of
-  // it?).
+  // Ok, let's do something weird here. There's a function in the sky_* API that
+  // frees a trace after it's called (in Rust, it takes the trace as a
+  // Box<Trace> with no &): sky_instrumenter_submit_trace().
+  // If we called sky_trace_free() blindly here, we would run into "pointed
+  // being freed was not allocated" errors (because the trace has already been
+  // freed). To overcome this, we're going to null out the trace just after
+  // calling sky_instrumenter_submit_trace(), and we'll free the trace here only
+  // if it's not null. We can do this here because we're passing Erlang
+  // resources around, which are pointers to traces and instrumenters: this way,
+  // the resource pointer always stays valid but at some point it will point to
+  // NULL.
+  sky_trace_t **trace_res = obj;
+
+  if (*trace_res != NULL) {
+    sky_trace_free(*trace_res);
+  }
 }
 
 // Load hook. Called by Erlang when this NIF library is loaded and there is no
@@ -235,10 +246,18 @@ static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ER
 
   sky_instrumenter_t *instrumenter;
   get_instrumenter(env, argv[0], &instrumenter);
-  sky_trace_t *trace;
-  get_trace(env, argv[1], &trace);
 
-  int res = sky_instrumenter_submit_trace((const sky_instrumenter_t *) instrumenter, trace);
+  sky_trace_t **trace_res;
+  enif_get_resource(env, argv[1], TRACE_RES_TYPE, (void **) &trace_res);
+
+  int res = sky_instrumenter_submit_trace((const sky_instrumenter_t *) instrumenter, *trace_res);
+
+  // sky_instrumenter_submit_trace() frees the trace, but to be sure let's NULL
+  // it out manually.
+  if (res == 0) {
+    *trace_res = NULL;
+  }
+
   return FFI_RESULT(res);
 }
 
