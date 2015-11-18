@@ -1,3 +1,21 @@
+defmodule Mix.Tasks.Compile.Skylight do
+  use Mix.Task
+
+  @shortdoc "Compiles the native C code for Skylight"
+
+  def run(_args) do
+    Mix.shell.info "Compiling native C code..."
+    check_executable!("make")
+    System.cmd("make", ["priv/skylight_nif.so"])
+  end
+
+  defp check_executable!(exec) do
+    unless System.find_executable(exec) do
+      Mix.raise "`#{exec}` not found in path."
+    end
+  end
+end
+
 defmodule Skylight.Mixfile do
   use Mix.Project
 
@@ -7,6 +25,7 @@ defmodule Skylight.Mixfile do
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     compilers: [:skylight] ++ Mix.compilers,
      deps: deps]
   end
 
