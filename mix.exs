@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Compile.Skylight do
   def run(_args) do
     Mix.shell.info "Compiling native C code..."
     check_executable!("make")
-    System.cmd("make", ["priv/skylight_nif.so"])
+    {result, _errcode} = System.cmd("make", ["priv/skylight_nif.so"], stderr_to_stdout: true)
+    IO.binwrite(result)
   end
 
   defp check_executable!(exec) do
