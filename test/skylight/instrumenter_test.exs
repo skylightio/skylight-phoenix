@@ -15,7 +15,7 @@ defmodule Skylight.InstrumenterTest do
     "SKYLIGHT_SOCKDIR_PATH" => "/tmp",
     "SKYLIGHT_AUTH_URL" => "https://auth.skylight.io/agent",
     "SKYLIGHT_VALIDATE_AUTHENTICATION" => "false",
-    }
+  }
 
   test "implementation of Inspect.inspect/2" do
     assert inspect(%Instrumenter{}) =~ ~r/#Skylight\.Instrumenter<[0-9a-f]+>/

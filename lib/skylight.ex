@@ -4,10 +4,19 @@ defmodule Skylight do
   @type resource :: binary
 
   def start(_type, _args) do
+    import Supervisor.Spec
+
     load_libskylight!()
 
-    # Empty supervisor, just because you have to return `{:ok, pid}` here.
-    Supervisor.start_link([], strategy: :one_for_one)
+    children = [
+      worker(Skylight.InstrumenterAgent, []),
+    ]
+    Supervisor.start_link(children, strategy: :one_for_one)
+  end
+
+  def stop(_state) do
+    inst = Skylight.InstrumenterAgent.get()
+    :ok = Skylight.Instrumenter.stop(inst)
   end
 
   defp load_libskylight!() do
