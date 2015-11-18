@@ -1,6 +1,7 @@
 /_build
 /cover
 /deps
+/doc
 erl_crash.dump
 *.ez
 
@@ -11,7 +12,12 @@ erl_crash.dump
 # skylightd artifacts
 *.pid
 *.sock
-/doc
+
+# skylight-rust source and compilation artifacts
 /c_src/skylight_dlopen*
+/priv/skylight_dlopen*
 /priv/skylightd
-/priv/libskylight.dylib
+/priv/libskylight*
+
+# Artifacts of the compilation of the native C code in this library
+/priv/skylight_nif.so
