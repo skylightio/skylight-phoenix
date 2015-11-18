@@ -112,7 +112,7 @@ int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
 //   int sky_load_libskylight(const char* filename);
 // in:
 //   load_libskylight(filename :: binary) :: {:ok, :loaded | :already_loaded} | :error
-static ERL_NIF_TERM load_libskylight(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_load_libskylight_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // Return early if the lib was already loaded (we're checking for the
   // existence of the sky_hrtime function here).
   if (sky_hrtime != 0) {
@@ -144,7 +144,7 @@ static ERL_NIF_TERM load_libskylight(ErlNifEnv *env, int argc, const ERL_NIF_TER
 //   uint64_t sky_hrtime();
 // in
 //   hrtime() :: integer
-static ERL_NIF_TERM hrtime(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_hrtime_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   uint64_t hrtime = sky_hrtime();
@@ -162,7 +162,7 @@ static ERL_NIF_TERM hrtime(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 //     ["SKYLIGHT_VERSION", "0.8.1",
 //      "SKYLIGHT_LAZY_START", "true"]
 //
-static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_instrumenter_new_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   ERL_NIF_TERM erl_env = argv[0];
@@ -213,7 +213,7 @@ static ERL_NIF_TERM instrumenter_new(ErlNifEnv *env, int argc, const ERL_NIF_TER
 //   int sky_instrumenter_start(const sky_instrumenter_t* inst);
 // in:
 //   instrumenter_start(instrumenter :: <resource>) :: :ok | :error
-static ERL_NIF_TERM instrumenter_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_instrumenter_start_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_instrumenter_t *instrumenter;
@@ -227,7 +227,7 @@ static ERL_NIF_TERM instrumenter_start(ErlNifEnv *env, int argc, const ERL_NIF_T
 //   int sky_instrumenter_stop(sky_instrumenter_t* inst);
 // in:
 //   instrumenter_stop(instrumenter :: <resource>) :: :ok | :error
-static ERL_NIF_TERM instrumenter_stop(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_instrumenter_stop_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_instrumenter_t *instrumenter;
@@ -241,7 +241,7 @@ static ERL_NIF_TERM instrumenter_stop(ErlNifEnv *env, int argc, const ERL_NIF_TE
 //   int sky_instrumenter_submit_trace(const sky_instrumenter_t* inst, sky_trace_t* trace);
 // in:
 //   instrumenter_submit_trace(inst :: <resource>, trace :: <resource>) :: :ok | :error
-static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_instrumenter_submit_trace_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_instrumenter_t *instrumenter;
@@ -265,7 +265,7 @@ static ERL_NIF_TERM instrumenter_submit_trace(ErlNifEnv *env, int argc, const ER
 //   int sky_instrumenter_track_desc(sky_instrumenter_t* inst, sky_buf_t endpoint, sky_buf_t desc, int* out);
 // in:
 //   instrumenter_track_desc(instrumenter :: <resource>, endpoint :: binary, desc :: binary) :: boolean
-static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_instrumenter_track_desc_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], binary);
@@ -295,7 +295,7 @@ static ERL_NIF_TERM instrumenter_track_desc(ErlNifEnv *env, int argc, const ERL_
 //   int sky_trace_new(uint64_t start, sky_buf_t uuid, sky_buf_t endpoint, sky_trace_t** out);
 // as
 //   trace_new(start :: integer, uuid :: binary, endpoint :: binary) :: <resource>
-static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_new_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
   CHECK_TYPE(argv[0], number);
   CHECK_TYPE(argv[1], binary);
@@ -329,7 +329,7 @@ static ERL_NIF_TERM trace_new(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 //   int sky_trace_start(sky_trace_t* trace, uint64_t* out);
 // as
 //   trace_start(trace :: <resource>) :: integer
-static ERL_NIF_TERM trace_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_start_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
@@ -345,7 +345,7 @@ static ERL_NIF_TERM trace_start(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
 //   int sky_trace_endpoint(sky_trace_t* trace, sky_buf_t* out);
 // in:
 //   trace_endpoint(trace :: <resource>) :: binary
-static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_endpoint_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
@@ -363,7 +363,7 @@ static ERL_NIF_TERM trace_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 //   int sky_trace_set_endpoint(const sky_trace_t* trace, sky_buf_t endpoint);
 // in:
 //   trace_set_endpoint(trace :: <resource>, endpoint :: binary) :: :ok | :error
-static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_set_endpoint_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], binary);
@@ -384,7 +384,7 @@ static ERL_NIF_TERM trace_set_endpoint(ErlNifEnv *env, int argc, const ERL_NIF_T
 //   int sky_trace_uuid(sky_trace_t* trace, sky_buf_t* out);
 // in:
 //   trace_uuid(trace :: <resource>) :: binary
-static ERL_NIF_TERM trace_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_uuid_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
@@ -402,7 +402,7 @@ static ERL_NIF_TERM trace_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
 //   int sky_trace_set_uuid(const sky_trace_t* trace, sky_buf_t uuid);
 // in:
 //   trace_set_uuid(trace :: <resource>, uuid :: binary) :: :ok | :error
-static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_set_uuid_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], binary);
@@ -423,7 +423,7 @@ static ERL_NIF_TERM trace_set_uuid(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 //   int sky_trace_instrument(const sky_trace_t* trace, uint64_t time, sky_buf_t category, uint32_t* out);
 // in:
 //   trace_instrument(trace :: <resource>, time :: non_neg_integer, category :: binary) :: non_neg_integer
-static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_instrument_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], number);
@@ -450,7 +450,7 @@ static ERL_NIF_TERM trace_instrument(ErlNifEnv *env, int argc, const ERL_NIF_TER
 //   int sky_trace_span_set_title(const sky_trace_t* trace, uint32_t handle, sky_buf_t title);
 // in:
 //   trace_span_set_title(trace :: <resource>, handle :: non_neg_integer, title :: binary) :: :ok | :error
-static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_span_set_title_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], number);
@@ -475,7 +475,7 @@ static ERL_NIF_TERM trace_span_set_title(ErlNifEnv *env, int argc, const ERL_NIF
 //   int sky_trace_span_set_desc(const sky_trace_t* trace, uint32_t handle, sky_buf_t desc);
 // in:
 //   trace_span_set_desc(trace :: <resource>, handle :: non_neg_integer, desc :: binary) :: :ok | :error
-static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_span_set_desc_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], number);
@@ -500,7 +500,7 @@ static ERL_NIF_TERM trace_span_set_desc(ErlNifEnv *env, int argc, const ERL_NIF_
 //   int sky_trace_span_done(const sky_trace_t* trace, uint32_t handle, uint64_t time);
 // in:
 //   trace_span_done(trace :: <resource>, handle :: non_neg_integer, time :: non_neg_integer) :: :ok | :error
-static ERL_NIF_TERM trace_span_done(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_trace_span_done_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[1], number);
@@ -523,7 +523,7 @@ static ERL_NIF_TERM trace_span_done(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 //   int sky_lex_sql(sky_buf_t sql, sky_buf_t* title_buf, sky_buf_t* desc_buf);
 // in:
 //   lex_sql(sql :: binary) :: binary
-static ERL_NIF_TERM lex_sql(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM sky_lex_sql_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   CHECK_TYPE(argv[0], binary);
@@ -592,24 +592,24 @@ void get_trace(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_trace_t **trace) {
 
 // List of functions to define in the module that loads this NIF file.
 static ErlNifFunc nif_funcs[] = {
-  {"load_libskylight", 1, load_libskylight},
-  {"hrtime", 0, hrtime},
-  {"instrumenter_new", 1, instrumenter_new},
-  {"instrumenter_start", 1, instrumenter_start},
-  {"instrumenter_stop", 1, instrumenter_stop},
-  {"instrumenter_submit_trace", 2, instrumenter_submit_trace},
-  {"instrumenter_track_desc", 3, instrumenter_track_desc},
-  {"trace_new", 3, trace_new},
-  {"trace_start", 1, trace_start},
-  {"trace_endpoint", 1, trace_endpoint},
-  {"trace_set_endpoint", 2, trace_set_endpoint},
-  {"trace_uuid", 1, trace_uuid},
-  {"trace_set_uuid", 2, trace_set_uuid},
-  {"trace_instrument", 3, trace_instrument},
-  {"trace_span_set_title", 3, trace_span_set_title},
-  {"trace_span_set_desc", 3, trace_span_set_desc},
-  {"trace_span_done", 3, trace_span_done},
-  {"lex_sql", 1, lex_sql}
+  {"load_libskylight", 1, sky_load_libskylight_nif},
+  {"hrtime", 0, sky_hrtime_nif},
+  {"instrumenter_new", 1, sky_instrumenter_new_nif},
+  {"instrumenter_start", 1, sky_instrumenter_start_nif},
+  {"instrumenter_stop", 1, sky_instrumenter_stop_nif},
+  {"instrumenter_submit_trace", 2, sky_instrumenter_submit_trace_nif},
+  {"instrumenter_track_desc", 3, sky_instrumenter_track_desc_nif},
+  {"trace_new", 3, sky_trace_new_nif},
+  {"trace_start", 1, sky_trace_start_nif},
+  {"trace_endpoint", 1, sky_trace_endpoint_nif},
+  {"trace_set_endpoint", 2, sky_trace_set_endpoint_nif},
+  {"trace_uuid", 1, sky_trace_uuid_nif},
+  {"trace_set_uuid", 2, sky_trace_set_uuid_nif},
+  {"trace_instrument", 3, sky_trace_instrument_nif},
+  {"trace_span_set_title", 3, sky_trace_span_set_title_nif},
+  {"trace_span_set_desc", 3, sky_trace_span_set_desc_nif},
+  {"trace_span_done", 3, sky_trace_span_done_nif},
+  {"lex_sql", 1, sky_lex_sql_nif}
 };
 
 
