@@ -33,12 +33,18 @@
     }                                           \
   } while (0)
 
+#define CHECK_TRACE(trace_call)                               \
+  do {                                                        \
+    if ((trace_call) != 0) {                                  \
+      ERL_RAISE("tried to get trace but it was nulled out");  \
+    }                                                         \
+  } while (0)
 
 // Helper function headers.
 sky_buf_t bin2buf(ErlNifBinary bin);
 ErlNifBinary buf2bin(sky_buf_t buf);
 void get_instrumenter(ErlNifEnv *, ERL_NIF_TERM, sky_instrumenter_t **);
-void get_trace(ErlNifEnv *, ERL_NIF_TERM, sky_trace_t **);
+int get_trace(ErlNifEnv *, ERL_NIF_TERM, sky_trace_t **);
 
 
 // Global atoms to be used throughout the functions.
@@ -333,7 +339,7 @@ static ERL_NIF_TERM sky_trace_start_nif(ErlNifEnv *env, int argc, const ERL_NIF_
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   uint64_t out;
   MAYBE_RAISE_FFI(sky_trace_start(trace, &out));
@@ -349,7 +355,7 @@ static ERL_NIF_TERM sky_trace_endpoint_nif(ErlNifEnv *env, int argc, const ERL_N
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   sky_buf_t endpoint_buf;
   MAYBE_RAISE_FFI(sky_trace_endpoint(trace, &endpoint_buf));
@@ -369,7 +375,7 @@ static ERL_NIF_TERM sky_trace_set_endpoint_nif(ErlNifEnv *env, int argc, const E
   CHECK_TYPE(argv[1], binary);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   ErlNifBinary endpoint_bin;
   enif_inspect_binary(env, argv[1], &endpoint_bin);
@@ -388,7 +394,7 @@ static ERL_NIF_TERM sky_trace_uuid_nif(ErlNifEnv *env, int argc, const ERL_NIF_T
   RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   sky_buf_t uuid_buf;
   MAYBE_RAISE_FFI(sky_trace_uuid(trace, &uuid_buf));
@@ -408,7 +414,7 @@ static ERL_NIF_TERM sky_trace_set_uuid_nif(ErlNifEnv *env, int argc, const ERL_N
   CHECK_TYPE(argv[1], binary);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   ErlNifBinary uuid_bin;
   enif_inspect_binary(env, argv[1], &uuid_bin);
@@ -430,7 +436,7 @@ static ERL_NIF_TERM sky_trace_instrument_nif(ErlNifEnv *env, int argc, const ERL
   CHECK_TYPE(argv[2], binary);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   uint64_t time;
   enif_get_uint64(env, argv[1], (ErlNifUInt64 *) &time);
@@ -457,7 +463,7 @@ static ERL_NIF_TERM sky_trace_span_set_title_nif(ErlNifEnv *env, int argc, const
   CHECK_TYPE(argv[2], binary);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   uint32_t handle;
   enif_get_uint(env, argv[1], (unsigned int *) &handle);
@@ -482,7 +488,7 @@ static ERL_NIF_TERM sky_trace_span_set_desc_nif(ErlNifEnv *env, int argc, const 
   CHECK_TYPE(argv[2], binary);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   uint32_t handle;
   enif_get_uint(env, argv[1], (unsigned int *) &handle);
@@ -507,7 +513,7 @@ static ERL_NIF_TERM sky_trace_span_done_nif(ErlNifEnv *env, int argc, const ERL_
   CHECK_TYPE(argv[2], number);
 
   sky_trace_t *trace;
-  get_trace(env, argv[0], &trace);
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
 
   uint32_t handle;
   enif_get_uint(env, argv[1], (unsigned int *) &handle);
@@ -583,10 +589,16 @@ void get_instrumenter(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_instrumente
   *instrumenter = *resource;
 }
 
-void get_trace(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_trace_t **trace) {
+int get_trace(ErlNifEnv *env, ERL_NIF_TERM resource_arg, sky_trace_t **trace) {
   sky_trace_t **trace_res;
   enif_get_resource(env, resource_arg, TRACE_RES_TYPE, (void **) &trace_res);
-  *trace = *trace_res;
+
+  if (*trace_res == NULL) {
+    return -1;
+  } else {
+    *trace = *trace_res;
+    return 0;
+  }
 }
 
 
