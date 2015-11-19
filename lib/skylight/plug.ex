@@ -19,7 +19,7 @@ defmodule Skylight.Plug do
 
   def call(conn, _opts) do
     trace = Trace.new("fake#endpoint")
-    whole_req_handle = Trace.instrument(trace, "whole_req")
+    whole_req_handle = Trace.instrument(trace, "app.whole_req")
 
     Logger.debug "Created a new trace for request at \"#{conn.request_path}\": #{inspect trace}"
 
@@ -30,8 +30,11 @@ defmodule Skylight.Plug do
   end
 
   def controller_hook(conn, _opts) do
-    {trace, _handle} = get_trace_and_handle(conn, :whole_req)
+    {trace, handle} = get_trace_and_handle(conn, :whole_req)
+    route = get_route(conn)
     :ok = Trace.put_endpoint(trace, get_route(conn))
+    :ok = Trace.set_span_title(trace, handle, route)
+    :ok = Trace.set_span_desc(trace, handle, route)
 
     Logger.debug "Changed the endpoint of the current trace in the controller: #{inspect trace}"
 
