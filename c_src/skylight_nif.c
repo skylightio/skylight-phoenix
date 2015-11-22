@@ -518,8 +518,8 @@ static ERL_NIF_TERM sky_trace_span_done_nif(ErlNifEnv *env, int argc, const ERL_
   uint32_t handle;
   enif_get_uint(env, argv[1], (unsigned int *) &handle);
 
-  uint32_t time;
-  enif_get_uint(env, argv[2], (unsigned int *) &time);
+  uint64_t time;
+  enif_get_uint64(env, argv[2], (ErlNifUInt64 *) &time);
 
   int res = sky_trace_span_done(trace, handle, time);
   return FFI_RESULT(res);
