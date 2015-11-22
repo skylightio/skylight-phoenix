@@ -9,10 +9,6 @@ defmodule Skylight.Plug do
 
   import Plug.Conn
 
-  defp debug(conn, str) do
-    Logger.debug "(#{conn.request_path}) #{str}"
-  end
-
   def init(opts) do
     opts
   end
