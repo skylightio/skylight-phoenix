@@ -70,7 +70,7 @@ defmodule Skylight.Trace do
   # here) returns nanoseconds though. This means we have to divide by 100_000
   # everytime we actually use this function.
   defp normalized_hrtime() do
-    NIF.hrtime() / 100_000
+    div(NIF.hrtime(), 100_000)
   end
 
   defimpl Inspect do
