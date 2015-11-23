@@ -34,9 +34,6 @@ defmodule MyApp.Web do
       import Ecto.Query, only: [from: 1, from: 2]
 
       import MyApp.Router.Helpers
-
-      import Skylight.Plug, only: [controller_hook: 2]
-      plug :controller_hook
     end
   end
 

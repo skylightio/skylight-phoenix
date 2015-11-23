@@ -14,7 +14,7 @@ defmodule Skylight.Plug do
   end
 
   def call(conn, _opts) do
-    trace = Trace.new("fake#endpoint")
+    trace = Trace.new("default")
     whole_req_handle = Trace.instrument(trace, "app.whole_req")
 
     Logger.debug "Created a new trace for request at \"#{conn.request_path}\": #{inspect trace}"
@@ -25,26 +25,18 @@ defmodule Skylight.Plug do
     |> register_before_send(&before_send/1)
   end
 
-  def controller_hook(conn, _opts) do
-    {trace, handle} = get_trace_and_handle(conn, :whole_req)
-    route = get_route(conn)
-    :ok = Trace.put_endpoint(trace, get_route(conn))
-    :ok = Trace.set_span_title(trace, handle, route)
-    :ok = Trace.set_span_desc(trace, handle, route)
-
-    Logger.debug "Changed the endpoint of the current trace in the controller: #{inspect trace}"
-
-    conn
-  end
-
   defp before_send(conn) do
     {trace, handle} = get_trace_and_handle(conn, :whole_req)
 
-    # Clean up the connection.
-    conn =
-      conn
-      |> put_private(:skylight_trace, nil)
-      |> put_private(:skylight_trace_handles, %{})
+    if endpoint = get_route(conn) do
+      :ok = Trace.put_endpoint(trace, endpoint)
+      :ok = Trace.set_span_title(trace, handle, endpoint)
+      :ok = Trace.set_span_desc(trace, handle, endpoint)
+    end
+
+    # Clean up the connection so that the trace in the connection can't be used
+    # after it's been submitted (because it's been freed by then).
+    conn = clean_up_conn(conn)
 
     :ok = Trace.mark_span_as_done(trace, handle)
     :ok = Instrumenter.submit_trace(inst(), trace)
@@ -57,6 +49,12 @@ defmodule Skylight.Plug do
 
   defp inst() do
     InstrumenterAgent.get()
+  end
+
+  defp clean_up_conn(conn) do
+    conn
+    |> put_private(:skylight_trace, nil)
+    |> put_private(:skylight_trace_handles, %{})
   end
 
   defp put_new_trace_handle(conn, name, handle) do
@@ -72,6 +70,6 @@ defmodule Skylight.Plug do
   defp get_route(conn) do
     controller = conn.private[:phoenix_controller]
     action = conn.private[:phoenix_action]
-    inspect(controller) <> "#" <> to_string(action)
+    controller && action && (inspect(controller) <> "#" <> to_string(action))
   end
 end
