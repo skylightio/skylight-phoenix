@@ -16,7 +16,6 @@ defmodule Skylight.TraceTest do
   test "get_started_at/1" do
     started_at = Trace.get_started_at(Trace.new("foo"))
     assert is_integer(started_at)
-    assert started_at > 1_000_000_000_000
   end
 
   test "get_endpoint/1 and put_endpoint/2" do
