@@ -16,7 +16,7 @@ defmodule Skylight.PlugTest do
 
   test "basic callback registration" do
     conn = conn(:get, "/foo") |> MyApp.call([])
-    time = conn.private[:skylight_resp_time]
-    assert is_integer(time) and time > 0
+    assert Map.has_key?(conn.private, :skylight_trace)
+    assert Map.has_key?(conn.private, :skylight_trace_handles)
   end
 end
