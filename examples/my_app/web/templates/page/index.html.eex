@@ -20,6 +20,11 @@
   </div>
 
   <div class="col-lg-6">
+    <h4>Dynamic content</h4>
+    <p>The email of the only user in the database is: <code><%= @user_email %></code></p>
+  </div>
+
+  <div class="col-lg-6">
     <h4>Help</h4>
     <ul>
       <li>

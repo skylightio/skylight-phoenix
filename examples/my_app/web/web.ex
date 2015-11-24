@@ -29,7 +29,7 @@ defmodule MyApp.Web do
     quote do
       use Phoenix.Controller
 
-      alias MyApp.Repo
+      alias MyApp.Skylight.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 1, from: 2]
 
@@ -61,7 +61,7 @@ defmodule MyApp.Web do
     quote do
       use Phoenix.Channel
 
-      alias MyApp.Repo
+      alias MyApp.Skylight.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 1, from: 2]
     end
