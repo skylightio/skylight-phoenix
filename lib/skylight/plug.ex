@@ -15,12 +15,13 @@ defmodule Skylight.Plug do
 
   def call(conn, _opts) do
     trace = Trace.new("default")
+    :ok = Trace.store(trace)
+
     whole_req_handle = Trace.instrument(trace, "app.whole_req")
 
     Logger.debug "Created a new trace for request at \"#{conn.request_path}\": #{inspect trace}"
 
     conn
-    |> put_private(:skylight_trace, trace)
     |> put_new_trace_handle(:whole_req, whole_req_handle)
     |> register_before_send(&before_send/1)
   end
@@ -40,6 +41,7 @@ defmodule Skylight.Plug do
 
     :ok = Trace.mark_span_as_done(trace, handle)
     :ok = Instrumenter.submit_trace(inst(), trace)
+    Process.delete(:skylight_trace)
 
     # Oh god, state is hard. Here, we can't inspect the trace (or really, use it
     # in any way) because submitting it made Rust free it. :(
@@ -52,9 +54,7 @@ defmodule Skylight.Plug do
   end
 
   defp clean_up_conn(conn) do
-    conn
-    |> put_private(:skylight_trace, nil)
-    |> put_private(:skylight_trace_handles, %{})
+    put_private(conn, :skylight_trace_handles, %{})
   end
 
   defp put_new_trace_handle(conn, name, handle) do
@@ -64,7 +64,7 @@ defmodule Skylight.Plug do
   end
 
   defp get_trace_and_handle(conn, name) do
-    {conn.private[:skylight_trace], conn.private[:skylight_trace_handles][name]}
+    {Trace.fetch(), conn.private[:skylight_trace_handles][name]}
   end
 
   defp get_route(conn) do

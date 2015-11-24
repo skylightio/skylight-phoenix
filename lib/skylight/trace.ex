@@ -65,6 +65,17 @@ defmodule Skylight.Trace do
     NIF.trace_span_done(trace.resource, handle, normalized_hrtime())
   end
 
+  @spec store(t) :: :ok
+  def store(%Trace{} = trace) do
+    Process.put(:skylight_trace, trace)
+    :ok
+  end
+
+  @spec fetch() :: t | nil
+  def fetch() do
+    Process.get(:skylight_trace)
+  end
+
   # So, there's this: the current Rust API takes 1/10ms when it wants a
   # timestamp (e.g. when instrumenting a trace). sky_hrtime() (NIF.hrtime/0
   # here) returns nanoseconds though. This means we have to divide by 100_000
