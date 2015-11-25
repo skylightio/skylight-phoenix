@@ -8,11 +8,18 @@ defmodule Skylight.Trace do
   }
 
   @type handle :: non_neg_integer
+  @type sql_flavor :: :generic | :mysql | :postgres
 
   alias __MODULE__
   alias Skylight.NIF
 
   defstruct [:resource]
+
+  @sql_flavors %{
+    generic: 0,
+    mysql: 1,
+    postgres: 2,
+  }
 
   @spec new(binary) :: t
   def new(endpoint) when is_binary(endpoint) do
@@ -63,6 +70,12 @@ defmodule Skylight.Trace do
   @spec mark_span_as_done(t, handle) :: :ok | :error
   def mark_span_as_done(%Trace{} = trace, handle) when is_integer(handle) do
     NIF.trace_span_done(trace.resource, handle, normalized_hrtime())
+  end
+
+  @spec set_span_sql(t, handle, binary, sql_flavor) :: :ok | :error
+  def set_span_sql(%Trace{} = trace, handle, sql, flavor)
+      when is_integer(handle) and is_binary(sql) and flavor in unquote(Map.keys(@sql_flavors)) do
+    NIF.trace_span_set_sql(trace.resource, handle, sql, @sql_flavors[flavor])
   end
 
   @spec store(t) :: :ok
