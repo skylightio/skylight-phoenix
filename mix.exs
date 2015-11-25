@@ -39,6 +39,7 @@ defmodule Skylight.Mixfile do
     [{:uuid, "~> 1.1"},
      {:plug, ">= 1.0.0", optional: true},
      {:cowboy, ">= 1.0.0", optional: true},
+     {:ecto, ">= 1.0.0", optional: true},
      {:ex_doc, "~> 0.10", only: :docs}]
   end
 end
