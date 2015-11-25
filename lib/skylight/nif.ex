@@ -57,6 +57,7 @@ defmodule Skylight.NIF do
   defnif trace_span_set_title(trace, handle, title)
   defnif trace_span_set_desc(trace, handle, desc)
   defnif trace_span_done(trace, handle, time)
+  defnif trace_span_set_sql(trace, handle, sql, flavor)
   defnif lex_sql(sql)
 
   # Loads the .so file that contains the NIFs.

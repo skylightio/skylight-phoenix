@@ -526,6 +526,32 @@ static ERL_NIF_TERM sky_trace_span_done_nif(ErlNifEnv *env, int argc, const ERL_
 }
 
 // Wraps:
+//   int sky_trace_span_set_sql(const sky_trace_t* trace, uint32_t handle, sky_buf_t sql, int flavor);
+// in:
+//   trace_span_set_sql(trace :: <resource>, handle :: integer, sql :: binary, flavor :: integer) :: :ok | :error
+static ERL_NIF_TERM sky_trace_span_set_sql_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  RAISE_IF_LIBSKYLIGHT_NOT_LOADED();
+  CHECK_TYPE(argv[1], number);
+  CHECK_TYPE(argv[2], binary);
+  CHECK_TYPE(argv[3], number);
+
+  sky_trace_t *trace;
+  CHECK_TRACE(get_trace(env, argv[0], &trace));
+
+  uint32_t handle;
+  enif_get_uint(env, argv[1], (unsigned int *) &handle);
+
+  ErlNifBinary sql_bin;
+  enif_inspect_binary(env, argv[2], &sql_bin);
+
+  int flavor;
+  enif_get_int(env, argv[3], &flavor);
+
+  int res = sky_trace_span_set_sql(trace, handle, bin2buf(sql_bin), flavor);
+  return FFI_RESULT(res);
+}
+
+// Wraps:
 //   int sky_lex_sql(sky_buf_t sql, sky_buf_t* title_buf, sky_buf_t* desc_buf);
 // in:
 //   lex_sql(sql :: binary) :: binary
@@ -621,6 +647,7 @@ static ErlNifFunc nif_funcs[] = {
   {"trace_span_set_title", 3, sky_trace_span_set_title_nif},
   {"trace_span_set_desc", 3, sky_trace_span_set_desc_nif},
   {"trace_span_done", 3, sky_trace_span_done_nif},
+  {"trace_span_set_sql", 4, sky_trace_span_set_sql_nif},
   {"lex_sql", 1, sky_lex_sql_nif}
 };
 
