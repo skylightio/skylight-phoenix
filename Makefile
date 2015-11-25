@@ -22,7 +22,7 @@ endif
 
 all: priv/skylight_nif.so
 
-priv/skylight_nif.so: c_src/skylight_dlopen.o
+priv/skylight_nif.so: c_src/skylight_dlopen.o c_src/skylight_nif.c
 	$(CC) $(CFLAGS) $(FLAGS) -shared $(LDFLAGS) -o $@ c_src/skylight_dlopen.o c_src/skylight_nif.c
 
 clean:
