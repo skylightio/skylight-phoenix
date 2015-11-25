@@ -1,10 +1,26 @@
 defmodule Skylight.InstrumenterAgent do
+  @moduledoc """
+  This agent is used to just store the instrumenter for the current application.
+
+  This should probably be replaced by an ETS table at some point.
+  """
+
+  # TODO store the instrumenter in an ETS table.
+
   alias Skylight.Instrumenter
 
+  @doc """
+  Starts this agent.
+  """
+  @spec start_link() :: GenServer.on_start
   def start_link() do
     Agent.start_link(&create_instrumenter/0, name: __MODULE__)
   end
 
+  @doc """
+  Returns the instrumenter stored in this agent.
+  """
+  @spec get(timeout) :: Instrumenter.t
   def get(timeout \\ 5000) do
     Agent.get(__MODULE__, &(&1), timeout)
   end
