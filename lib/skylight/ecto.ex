@@ -2,7 +2,6 @@ if Code.ensure_loaded?(Ecto) do
   defmodule Skylight.Ecto do
     require Logger
 
-    alias Skylight.NIF
     alias Skylight.Trace
 
     @doc """
@@ -21,8 +20,7 @@ if Code.ensure_loaded?(Ecto) do
 
       if trace do
         handle = Trace.instrument(trace, "ecto.query")
-        :ok = Trace.set_span_title(trace, handle, query)
-        :ok = Trace.set_span_desc(trace, handle, query)
+        :ok = Trace.set_span_sql(trace, handle, query, sql_flavor(repo))
       else
         Logger.debug "No trace found in the current process"
       end
@@ -38,11 +36,19 @@ if Code.ensure_loaded?(Ecto) do
 
     defp query_to_string(repo, kind, queryable) when kind in ~w(all update_all delete_all)a do
       {query, _} = Ecto.Adapters.SQL.to_sql(kind, repo, queryable)
-      NIF.lex_sql(query)
+      query
     end
 
     defp query_to_string(_repo, _kind, queryable) do
       inspect(queryable)
+    end
+
+    defp sql_flavor(repo) do
+      case repo.__adapter__ do
+        Ecto.Adapters.MySQL    -> :mysql
+        Ecto.Adapters.Postgres -> :postgres
+        _                      -> :generic
+      end
     end
   end
 end
