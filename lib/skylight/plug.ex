@@ -30,7 +30,7 @@ defmodule Skylight.Plug do
     {trace, handle} = get_trace_and_handle(conn, :whole_req)
 
     if endpoint = get_route(conn) do
-      :ok = Trace.put_endpoint(trace, endpoint)
+      :ok = Trace.set_endpoint(trace, endpoint)
       :ok = Trace.set_span_title(trace, handle, endpoint)
       :ok = Trace.set_span_desc(trace, handle, endpoint)
     end

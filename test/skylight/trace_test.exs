@@ -18,18 +18,18 @@ defmodule Skylight.TraceTest do
     assert is_integer(started_at)
   end
 
-  test "get_endpoint/1 and put_endpoint/2" do
+  test "get_endpoint/1 and set_endpoint/2" do
     trace = Trace.new("my_trace")
     assert Trace.get_endpoint(trace) == "my_trace"
-    assert :ok = Trace.put_endpoint(trace, "my_new_trace")
+    assert :ok = Trace.set_endpoint(trace, "my_new_trace")
     assert Trace.get_endpoint(trace) == "my_new_trace"
   end
 
-  test "get_uuid/1 and put_uuid/2" do
+  test "get_uuid/1 and set_uuid/2" do
     trace = Trace.new("my_trace")
     assert byte_size(Trace.get_uuid(trace)) > 0
     new_uuid = UUID.uuid4()
-    assert :ok = Trace.put_uuid(trace, new_uuid)
+    assert :ok = Trace.set_uuid(trace, new_uuid)
     assert Trace.get_uuid(trace) == new_uuid
   end
 
