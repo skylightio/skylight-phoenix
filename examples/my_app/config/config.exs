@@ -11,6 +11,7 @@ config :my_app, MyApp.Endpoint,
   root: Path.dirname(__DIR__),
   secret_key_base: "FdjAoM5MBwvUIEa1JdM2/1bWndksTR7c6uduJemwD8Hcc9kDQX8AL8LtxBmCVc2U",
   render_errors: [accepts: ~w(html json)],
+  instrumenters: [Skylight],
   pubsub: [name: MyApp.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
