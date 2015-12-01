@@ -45,18 +45,17 @@ defmodule Skylight do
   @spec phoenix_controller_render(:stop, non_neg_integer, term) :: term
   def phoenix_controller_render(start_or_stop, arg2, arg3)
 
-  def phoenix_controller_render(:start, compile, runtime) do
+  def phoenix_controller_render(:start, _compile, runtime) do
     trace = Trace.fetch()
 
     handle = Trace.instrument(trace, "view_render")
     :ok = Trace.set_span_title(trace, handle, runtime.template)
-    :ok = Trace.set_span_desc(trace, handle, runtime.template)
 
     {:ok, handle}
   end
 
   def phoenix_controller_render(:stop, diff, {:ok, handle}) do
     trace = Trace.fetch()
-    Trace.mark_span_as_done(trace, handle)
+    :ok = Trace.mark_span_as_done(trace, handle)
   end
 end
