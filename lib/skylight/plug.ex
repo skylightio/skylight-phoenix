@@ -18,6 +18,7 @@ defmodule Skylight.Plug do
     :ok = Trace.store(trace)
 
     whole_req_handle = Trace.instrument(trace, "app.whole_req")
+    :ok = Trace.set_span_title(trace, whole_req_handle, "app.whole_req")
 
     Logger.debug "Created a new trace for request at \"#{conn.request_path}\": #{inspect trace}"
 
@@ -31,8 +32,6 @@ defmodule Skylight.Plug do
 
     if endpoint = get_route(conn) do
       :ok = Trace.set_endpoint(trace, endpoint)
-      :ok = Trace.set_span_title(trace, handle, endpoint)
-      :ok = Trace.set_span_desc(trace, handle, endpoint)
     end
 
     # Clean up the connection so that the trace in the connection can't be used
