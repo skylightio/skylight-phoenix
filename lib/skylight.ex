@@ -54,7 +54,7 @@ defmodule Skylight do
     {:ok, handle}
   end
 
-  def phoenix_controller_render(:stop, diff, {:ok, handle}) do
+  def phoenix_controller_render(:stop, _diff, {:ok, handle}) do
     trace = Trace.fetch()
     :ok = Trace.mark_span_as_done(trace, handle)
   end
