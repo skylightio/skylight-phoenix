@@ -1,6 +1,25 @@
 defmodule Skylight.Plug do
   @moduledoc """
-  TODO
+  A plug to instrument the current request.
+
+  This plug is meant to be used as the first plug in the plug pipeline of your
+  application. It will instrument each request that goes through the pipeline,
+  measuring the time it takes for the request to be handled and for the response
+  to be sent.
+
+  Read the documentation for the `Skylight` module for more information about
+  Skylight and its configuration.
+
+  ## Examples
+
+  For accurate results, this plug should be placed first in the plug pipeline of
+  your application.
+
+      defmodule MyApp.Endpoint do
+        plug Skylight.Plug
+        # all other plugs
+      end
+
   """
 
   @behaviour Plug
