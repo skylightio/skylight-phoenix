@@ -11,8 +11,9 @@ defmodule Skylight do
     load_libskylight!()
 
     children = [
-      worker(Skylight.InstrumenterAgent, []),
+      worker(Skylight.InstrumenterStore, []),
     ]
+
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 

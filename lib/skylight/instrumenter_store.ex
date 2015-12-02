@@ -1,28 +1,29 @@
-defmodule Skylight.InstrumenterAgent do
+defmodule Skylight.InstrumenterStore do
   @moduledoc """
-  This agent is used to just store the instrumenter for the current application.
-
-  This should probably be replaced by an ETS table at some point.
+  TODO
   """
 
-  # TODO store the instrumenter in an ETS table.
+  @table_name :skylight
 
   alias Skylight.Instrumenter
 
   @doc """
-  Starts this agent.
   """
   @spec start_link() :: GenServer.on_start
   def start_link() do
-    Agent.start_link(&create_instrumenter/0, name: __MODULE__)
+    Agent.start_link(&create_ets_table/0)
   end
 
   @doc """
-  Returns the instrumenter stored in this agent.
   """
   @spec get(timeout) :: Instrumenter.t
   def get(timeout \\ 5000) do
-    Agent.get(__MODULE__, &(&1), timeout)
+    case :ets.lookup(@table_name, :instrumenter) do
+      [] ->
+        raise "instrumenter not found in the ETS table"
+      [{:instrumenter, instrumenter}] ->
+        instrumenter
+    end
   end
 
   @priv Application.app_dir(:skylight, "priv")
@@ -37,7 +38,12 @@ defmodule Skylight.InstrumenterAgent do
     "SKYLIGHT_VALIDATE_AUTHENTICATION" => "false",
   }
 
-  defp create_instrumenter() do
+  defp create_ets_table do
+    :ets.new(@table_name, [:protected, :named_table, :set])
+    :ets.insert(@table_name, {:instrumenter, create_and_start_instrumenter()})
+  end
+
+  defp create_and_start_instrumenter do
     inst = Instrumenter.new(@instrumenter_env)
     :ok = Instrumenter.start(inst)
     inst
