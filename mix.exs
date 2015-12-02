@@ -27,11 +27,16 @@ defmodule Skylight.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      compilers: [:skylight] ++ Mix.compilers,
+     aliases: [test: "test --no-start"],
      deps: deps]
   end
 
   def application do
     [applications: [:logger, :crypto, :uuid],
+     env: [version: "0.8.1",
+           lazy_start: true,
+           auth_url: "https://auth.skylight.io/agent",
+           validate_authentication: false],
      mod: {Skylight, []}]
   end
 

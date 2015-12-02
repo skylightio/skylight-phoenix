@@ -14,6 +14,7 @@ defmodule Skylight.Store do
   use GenServer
 
   alias Skylight.Instrumenter
+  alias Skylight.Config
 
   @table_name __MODULE__
   @table_opts [:named_table, :protected, :set, read_concurrency: true]
@@ -51,25 +52,13 @@ defmodule Skylight.Store do
 
   ## Helpers
 
-  @priv Application.app_dir(:skylight, "priv")
-  @instrumenter_env %{
-    "SKYLIGHT_AUTHENTICATION" => (System.get_env("DIREWOLF_PHOENIX_TOKEN") || raise "missing token"),
-    "SKYLIGHT_VERSION" => "0.8.1",
-    "SKYLIGHT_LAZY_START" => "false",
-    "SKYLIGHT_DAEMON_EXEC_PATH" => Path.join(@priv, "skylightd"),
-    "SKYLIGHT_DAEMON_LIB_PATH" => @priv,
-    "SKYLIGHT_SOCKDIR_PATH" => "/tmp",
-    "SKYLIGHT_AUTH_URL" => "https://auth.skylight.io/agent",
-    "SKYLIGHT_VALIDATE_AUTHENTICATION" => "false",
-  }
-
   defp create_ets_table do
     :ets.new(@table_name, @table_opts)
     :ets.insert(@table_name, {:instrumenter, create_and_start_instrumenter()})
   end
 
   defp create_and_start_instrumenter do
-    inst = Instrumenter.new(@instrumenter_env)
+    inst = Instrumenter.new(Config.read())
     :ok = Instrumenter.start(inst)
     inst
   end

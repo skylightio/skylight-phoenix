@@ -9,4 +9,11 @@ defmodule Skylight.TestHelpers do
   end
 end
 
+# The :skylight application won't start unless there's an :authentication key in
+# its env, so we're manually putting that key in the environment here and then
+# manually starting the application. Note that for this to work, we had to set
+# up the "test" alias in mix.exs to run "test --no-start".
+Application.put_env(:skylight, :authentication, Skylight.TestHelpers.auth_token())
+Application.ensure_all_started(:skylight)
+
 ExUnit.start()
