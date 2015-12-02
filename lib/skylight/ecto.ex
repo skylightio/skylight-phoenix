@@ -19,7 +19,7 @@ if Code.ensure_loaded?(Ecto) do
       handle = nil
 
       if trace do
-        handle = Trace.instrument(trace, "ecto.query")
+        handle = Trace.instrument(trace, "db.ecto.query")
         :ok = Trace.set_span_sql(trace, handle, query, sql_flavor(repo))
       else
         Logger.debug "No trace found in the current process"
