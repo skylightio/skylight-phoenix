@@ -48,7 +48,7 @@ defmodule Skylight do
   def phoenix_controller_render(:start, _compile, runtime) do
     trace = Trace.fetch()
 
-    handle = Trace.instrument(trace, "view_render")
+    handle = Trace.instrument(trace, "view.render")
     :ok = Trace.set_span_title(trace, handle, runtime.template)
 
     {:ok, handle}
