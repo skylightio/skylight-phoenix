@@ -171,6 +171,15 @@ defmodule Skylight.Trace do
     Process.get(:skylight_trace)
   end
 
+  @doc """
+  Removes the trace stored in the process dictionary.
+  """
+  @spec unstore() :: :ok
+  def unstore() do
+    Process.delete(:skylight_trace)
+    :ok
+  end
+
   # So, there's this: the current Rust API takes 1/10ms when it wants a
   # timestamp (e.g. when instrumenting a trace). sky_hrtime() (NIF.hrtime/0
   # here) returns nanoseconds though. This means we have to divide by 100_000

@@ -1,4 +1,8 @@
 defmodule Skylight.Ecto.Repo do
+  @moduledoc """
+  TODO
+  """
+
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       @proxy_repo Keyword.fetch!(opts, :proxy_to)

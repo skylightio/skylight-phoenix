@@ -1,5 +1,9 @@
 if Code.ensure_loaded?(Ecto) do
   defmodule Skylight.Ecto do
+    @moduledoc """
+    TODO
+    """
+
     require Logger
 
     alias Skylight.Trace

@@ -1,4 +1,8 @@
 defmodule Skylight.Plug do
+  @moduledoc """
+  TODO
+  """
+
   @behaviour Plug
 
   require Logger
@@ -34,7 +38,8 @@ defmodule Skylight.Plug do
 
     :ok = Trace.mark_span_as_done(trace, whole_req_handle)
     :ok = Instrumenter.submit_trace(Store.get_instrumenter(), trace)
-    Process.delete(:skylight_trace)
+
+    Trace.unstore()
 
     conn
   end
