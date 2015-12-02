@@ -1,23 +1,38 @@
-defmodule Skylight.InstrumenterStore do
+defmodule Skylight.Store do
   @moduledoc """
-  TODO
+  Store for global state in the `:skylight` application.
+
+  This store is a `GenServer` that manages all the application-wide global
+  state.
+
+  The ETS table stores:
+
+    * the global Skylight instrumenter (under the `:instrumenter` key)
+
   """
 
-  @table_name :skylight
+  use GenServer
 
   alias Skylight.Instrumenter
 
+  @table_name __MODULE__
+  @table_opts [:named_table, :protected, :set, read_concurrency: true]
+
+  ## Public API
+
   @doc """
+  Starts this store and creates the ETS table.
   """
   @spec start_link() :: GenServer.on_start
   def start_link() do
-    Agent.start_link(&create_ets_table/0)
+    GenServer.start_link(__MODULE__, :ok)
   end
 
   @doc """
+  Retrieves the instrumenter from the global state.
   """
-  @spec get(timeout) :: Instrumenter.t
-  def get(timeout \\ 5000) do
+  @spec get_instrumenter() :: Instrumenter.t | no_return
+  def get_instrumenter() do
     case :ets.lookup(@table_name, :instrumenter) do
       [] ->
         raise "instrumenter not found in the ETS table"
@@ -25,6 +40,16 @@ defmodule Skylight.InstrumenterStore do
         instrumenter
     end
   end
+
+  ## Callbacks
+
+  @doc false
+  def init(:ok) do
+    create_ets_table()
+    {:ok, nil}
+  end
+
+  ## Helpers
 
   @priv Application.app_dir(:skylight, "priv")
   @instrumenter_env %{
@@ -39,7 +64,7 @@ defmodule Skylight.InstrumenterStore do
   }
 
   defp create_ets_table do
-    :ets.new(@table_name, [:protected, :named_table, :set])
+    :ets.new(@table_name, @table_opts)
     :ets.insert(@table_name, {:instrumenter, create_and_start_instrumenter()})
   end
 

@@ -5,7 +5,7 @@ defmodule Skylight.Plug do
 
   alias Skylight.Trace
   alias Skylight.Instrumenter
-  alias Skylight.InstrumenterStore
+  alias Skylight.Store
 
   import Plug.Conn
 
@@ -33,7 +33,7 @@ defmodule Skylight.Plug do
     end
 
     :ok = Trace.mark_span_as_done(trace, whole_req_handle)
-    :ok = Instrumenter.submit_trace(InstrumenterStore.get(), trace)
+    :ok = Instrumenter.submit_trace(Store.get_instrumenter(), trace)
     Process.delete(:skylight_trace)
 
     conn

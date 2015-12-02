@@ -11,15 +11,10 @@ defmodule Skylight do
     load_libskylight!()
 
     children = [
-      worker(Skylight.InstrumenterStore, []),
+      worker(Skylight.Store, []),
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
-  end
-
-  def stop(_state) do
-    inst = Skylight.InstrumenterAgent.get()
-    :ok = Skylight.Instrumenter.stop(inst)
   end
 
   defp load_libskylight!() do
