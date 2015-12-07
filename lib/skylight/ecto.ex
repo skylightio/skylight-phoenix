@@ -1,4 +1,4 @@
-if Code.ensure_loaded?(Ecto) do
+if Code.ensure_compiled?(Ecto) do
   defmodule Skylight.Ecto do
     @moduledoc """
     TODO
