@@ -5,6 +5,9 @@
 erl_crash.dump
 *.ez
 
+# Testing stuff
+/test/fixtures/**/_build
+
 # C stuff
 *.so
 *.o

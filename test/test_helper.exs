@@ -9,6 +9,8 @@ defmodule Skylight.TestHelpers do
   end
 end
 
+Mix.shell(Mix.Shell.Process)
+
 # The :skylight application won't start unless there's an :authentication key in
 # its env, so we're manually putting that key in the environment here and then
 # manually starting the application. Note that for this to work, we had to set
