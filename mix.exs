@@ -1,9 +1,17 @@
+Code.require_file "./lib/skylight/native_ext.ex"
+
 defmodule Mix.Tasks.Compile.Skylight do
   use Mix.Task
 
-  @shortdoc "Compiles the native C code for Skylight"
+  @shortdoc "Fetches Skylight binaries and compiles native C code"
 
   def run(_args) do
+    Skylight.NativeExt.fetch()
+    Skylight.NativeExt.build()
+    compile_c_code()
+  end
+
+  defp compile_c_code do
     Mix.shell.info "Compiling native C code..."
     check_executable!("make")
     {result, _errcode} = System.cmd("make", ["priv/skylight_nif.so"], stderr_to_stdout: true)
