@@ -24,3 +24,4 @@ erl_crash.dump
 
 # Artifacts of the compilation of the native C code in this library
 /priv/skylight_nif.so*
+/tmp
