@@ -6,10 +6,6 @@ defmodule Skylight.NativeExt do
 
   @base_url "https://s3.amazonaws.com/skylight-agent-packages/skylight-native"
 
-  # These things are stored in the libskylight.yml file in the Ruby version and
-  # a bunch of checks are performed to ensure they're actually there. Here,
-  # let's just be sure they're here :).
-  # TODO remove the comment above!
   @version "0.7.0-629fc27"
   @checksums %{
     "x86-linux"     => "cd601750d0250d9e2cfed96fa9d4ac642a1b22053cf5ee5a7523da2f583fdf2d",
@@ -17,11 +13,23 @@ defmodule Skylight.NativeExt do
     "x86_64-darwin" => "62b19c0f34e983d8d752b1b9514d427cc019cfdf2f3f6b2f1424cf06710330d8",
   }
 
+  def fetch_and_build(_opts \\ []) do
+    unless artifacts_already_exists?() do
+      try do
+        fetch()
+        build()
+      catch
+        :throw, {:error, msg} ->
+          Logger.error "An error stopped the Skylight fetch/build process: #{msg}"
+      end
+    end
+  end
+
   def fetch(opts \\ []) do
     arch        = arch_and_os()
-    checksum    = @checksums[arch]
     destination = destination(opts)
     source_url  = source_url(opts)
+    checksum = @checksums[arch] || throw({:error, "the current architecture (#{arch}) is not supported"})
 
     # Create the destination directory if it doesn't exist already
     destination |> Path.dirname() |> File.mkdir_p!()
@@ -32,12 +40,11 @@ defmodule Skylight.NativeExt do
     Logger.debug "Attempting to fetch from #{source_url}"
 
     case http_module().get(source_url) do
-      {:error, reason} ->
-        Logger.error "Failed to fetch from #{source_url}: #{inspect reason}"
       {:ok, contents} ->
-        if verify_checksum(checksum, contents) do
-          File.write!(destination, contents)
-        end
+        verify_checksum(checksum, contents)
+        File.write!(destination, contents)
+      {:error, reason} ->
+        throw {:error, "failed to fetch from #{source_url}: #{inspect reason}"}
     end
   end
 
@@ -45,17 +52,19 @@ defmodule Skylight.NativeExt do
     archive = destination(opts)
 
     unless File.exists?(archive) do
-      raise ".tar.gz Skylight archive not found"
+      throw {:error, "the tar archive containing Skylight artifacts was not found at #{archive}"}
     end
 
     File.cd! Path.dirname(archive), fn ->
-      unless :erl_tar.extract(archive, [:compressed]) == :ok do
-        raise "unable to extract the .tar.gz file"
+      case :erl_tar.extract(archive, [:compressed]) do
+        :ok ->
+          :ok
+        {:error, reason} ->
+          throw {:error, "error while extracting the tar archive: #{:erl_tar.format_error(reason)}"}
       end
     end
 
     move_extracted_files(Path.dirname(archive))
-    File.rm_rf!(archive)
     File.rm_rf!("tmp")
   end
 
@@ -85,7 +94,7 @@ defmodule Skylight.NativeExt do
   end
 
   @spec basename(opts) :: Path.t
-  defp basename(opts) do
+  defp basename(_opts) do
     "skylight_#{arch_and_os()}.tar.gz"
   end
 
@@ -100,11 +109,9 @@ defmodule Skylight.NativeExt do
   end
 
   defp verify_checksum(sha2, tar_gz) do
-    if sha2 == sha2(tar_gz) do
-      true
-    else
-      Logger.error "Checksum mismatch. Expected #{inspect sha2}, got #{inspect tar_gz}"
-      false
+    tar_sha2 = sha2(tar_gz)
+    unless sha2 == tar_sha2 do
+      throw {:error, "checksum mismatch: expected #{inspect sha2}, got #{inspect tar_sha2}"}
     end
   end
 
@@ -113,8 +120,7 @@ defmodule Skylight.NativeExt do
   end
 
   defp move_extracted_files(extraction_dir) do
-    # TODO only check for the correct extension of libskylight
-    files = ~w(skylight_dlopen.c skylight_dlopen.h libskylight.dylib libskylight.so skylightd)
+    files = ~w(skylight_dlopen.c skylight_dlopen.h skylightd libskylight.#{so_ext()})
     Enum.each(files, &move_extracted_file(extraction_dir, &1))
   end
 
@@ -128,6 +134,23 @@ defmodule Skylight.NativeExt do
 
   defp move_extracted_file(extraction_dir, "libskylight." <> _ = file) do
     File.rename(Path.join(extraction_dir, file), Path.join("priv", file))
+  end
+
+  defp artifacts_already_exists? do
+    files = ~w(c_src/skylight_dlopen.h
+               c_src/skylight_dlopen.c
+               priv/skylightd
+               priv/libskylight.#{so_ext()})
+
+    Enum.all?(files, &File.regular?/1)
+  end
+
+  defp so_ext do
+    case :os.type do
+      {:unix, :darwin} -> "dylib"
+      {:unix, _}       -> "so"
+      _                -> raise "unsupported OS"
+    end
   end
 end
 

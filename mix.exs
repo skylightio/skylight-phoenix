@@ -6,8 +6,7 @@ defmodule Mix.Tasks.Compile.Skylight do
   @shortdoc "Fetches Skylight binaries and compiles native C code"
 
   def run(_args) do
-    Skylight.NativeExt.fetch()
-    Skylight.NativeExt.build()
+    Skylight.NativeExt.fetch_and_build()
     compile_c_code()
   end
 
