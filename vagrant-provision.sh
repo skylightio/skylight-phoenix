@@ -8,8 +8,8 @@ apt-get -f install
 # tools for installing stuff
 apt-get install -y wget git
 
-# Node
-apt-get install -y nodejs npm
+# Stuff that phoenix likes
+apt-get install -y node npm inotify-tools
 
 # Postgres
 apt-get install -y postgresql postgresql-contrib
@@ -31,9 +31,11 @@ mix local.rebar --force
 # Multirust for Rust (Rust is not installed, but it can easily be installed if
 # needed)
 cd ~
-git clone --recursive https://github.com/brson/multirust && cd multirust
-git submodule update --init
-./build.sh && ./install.sh
+if [ ! -d ./multirust ]; then
+    git clone --recursive https://github.com/brson/multirust && cd multirust
+    git submodule update --init
+    ./build.sh && ./install.sh
+fi
 
 # Dev facilities
 apt-get install -y htop
