@@ -1,4 +1,4 @@
-Code.require_file "./lib/skylight/native_ext.ex"
+Code.require_file "./bootstrap/skylight_bootstrap.ex"
 
 defmodule Mix.Tasks.Compile.Skylight do
   use Mix.Task
@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Compile.Skylight do
   @shortdoc "Fetches Skylight binaries and compiles native C code"
 
   def run(_args) do
-    Skylight.NativeExt.fetch_and_build()
+    SkylightBootstrap.fetch()
+    SkylightBootstrap.build()
     compile_c_code()
   end
 
