@@ -1,0 +1,28 @@
+<h2>Listing drinks</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Brand</th>
+      <th>Price</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for drink <- @drinks do %>
+    <tr>
+      <td><%= drink.brand %></td>
+      <td><%= drink.price %></td>
+
+      <td class="text-right">
+        <%= link "Show", to: drink_path(@conn, :show, drink), class: "btn btn-default btn-xs" %>
+        <%= link "Edit", to: drink_path(@conn, :edit, drink), class: "btn btn-default btn-xs" %>
+        <%= link "Delete", to: drink_path(@conn, :delete, drink), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<%= link "New drink", to: drink_path(@conn, :new) %>

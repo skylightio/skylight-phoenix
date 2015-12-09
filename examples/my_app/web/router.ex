@@ -18,6 +18,7 @@ defmodule MyApp.Router do
 
     get "/", PageController, :index
     get "/bare", PageController, :bare
+    resources "/drinks", DrinkController
   end
 
   # Other scopes may use custom stacks.

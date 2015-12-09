@@ -1,0 +1,18 @@
+<h2>Show drink</h2>
+
+<ul>
+
+  <li>
+    <strong>Brand:</strong>
+    <%= @drink.brand %>
+  </li>
+
+  <li>
+    <strong>Price:</strong>
+    <%= @drink.price %>
+  </li>
+
+</ul>
+
+<%= link "Edit", to: drink_path(@conn, :edit, @drink) %>
+<%= link "Back", to: drink_path(@conn, :index) %>

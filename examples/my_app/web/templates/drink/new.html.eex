@@ -1,0 +1,6 @@
+<h2>New drink</h2>
+
+<%= render "form.html", changeset: @changeset,
+                        action: drink_path(@conn, :create) %>
+
+<%= link "Back", to: drink_path(@conn, :index) %>
