@@ -1,6 +1,10 @@
 defmodule SkylightBootstrap.HTTP do
   @callback get(binary) :: {:ok, data :: binary} | {:error, reason :: term}
 
+  @doc """
+  Callback implementation of `SkylightBootstrap.HTTP.get/1`.
+  """
+  @spec get(binary) :: {:ok, binary} | {:error, term}
   def get(url) do
     request = {to_char_list(url), []}
     http_opts = [timeout: 10_000, autoredirect: true]

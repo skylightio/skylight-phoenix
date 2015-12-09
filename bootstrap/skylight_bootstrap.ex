@@ -15,18 +15,6 @@ defmodule SkylightBootstrap do
     "x86_64-darwin" => "62b19c0f34e983d8d752b1b9514d427cc019cfdf2f3f6b2f1424cf06710330d8",
   }
 
-  def fetch_and_build(_opts \\ []) do
-    unless artifacts_already_exists?() do
-      try do
-        fetch()
-        build()
-      catch
-        :throw, {:error, msg} ->
-          Logger.error "An error stopped the Skylight fetch/build process: #{msg}"
-      end
-    end
-  end
-
   def fetch(opts \\ []) do
     arch        = arch_and_os()
     destination = destination(opts)
