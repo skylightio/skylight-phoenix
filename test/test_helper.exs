@@ -9,6 +9,16 @@ defmodule Skylight.TestHelpers do
   end
 end
 
+defmodule SkylightBootstrap.TestHelpers do
+  @fixtures_path "test/bootstrap/fixtures"
+
+  def fixture_path(path) do
+    @fixtures_path
+    |> Path.join(path)
+    |> Path.expand()
+  end
+end
+
 Mix.shell(Mix.Shell.Process)
 
 # The :skylight application won't start unless there's an :authentication key in

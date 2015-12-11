@@ -15,47 +15,65 @@ defmodule SkylightBootstrap do
     "x86_64-darwin" => "62b19c0f34e983d8d752b1b9514d427cc019cfdf2f3f6b2f1424cf06710330d8",
   }
 
+  @doc """
+  """
+  @spec fetch(Keyword.t) :: :ok | {:error, binary}
   def fetch(opts \\ []) do
-    arch        = arch_and_os()
-    destination = destination(opts)
+    opts = default_opts(opts)
+
+    if supported_arch?(opts[:arch]) do
+      fetch_for_arch(opts[:arch], opts)
+    else
+      {:error, "unsupported architecture: #{opts[:arch]}"}
+    end
+  end
+
+  defp fetch_for_arch(arch, opts) do
+    # Here, we're sure that `arch` is supported.
+    destination = Path.join(opts[:archives_dir], basename(opts))
     source_url  = source_url(opts)
-    checksum = @checksums[arch] || throw({:error, "the current architecture (#{arch}) is not supported"})
+    checksum    = Map.fetch!(@checksums, arch)
 
     # Create the destination directory if it doesn't exist already
-    destination |> Path.dirname() |> File.mkdir_p!()
-
-    # Let's remove the existing file if it's there
-    File.rm_rf!(destination)
+    prepare_destination(destination)
 
     Logger.debug "Attempting to fetch from #{source_url}"
 
     case http_module().get(source_url) do
       {:ok, contents} ->
-        verify_checksum(checksum, contents)
-        File.write!(destination, contents)
+        case verify_checksum(checksum, contents) do
+          :ok -> File.write!(destination, contents)
+          err -> err
+        end
       {:error, reason} ->
-        throw {:error, "failed to fetch from #{source_url}: #{inspect reason}"}
+        {:error, "failed to fetch from #{source_url}: #{inspect reason}"}
     end
   end
 
+  defp supported_arch?(arch) when arch in unquote(Map.keys(@checksums)),
+    do: true
+  defp supported_arch?(_arch),
+    do: false
+
   def build(opts \\ []) do
-    archive = destination(opts)
+    opts    = default_opts(opts)
+    archive = Path.join(opts[:archives_dir], basename(opts))
 
-    unless File.exists?(archive) do
-      throw {:error, "the tar archive containing Skylight artifacts was not found at #{archive}"}
+    if File.exists?(archive) do
+      build_existing_archive(archive, opts)
+    else
+      {:error, "the archive with Skylight artifacts in it was not found at #{archive}"}
     end
+  end
 
-    File.cd! Path.dirname(archive), fn ->
-      case :erl_tar.extract(archive, [:compressed]) do
-        :ok ->
-          :ok
-        {:error, reason} ->
-          throw {:error, "error while extracting the tar archive: #{:erl_tar.format_error(reason)}"}
-      end
+  defp build_existing_archive(archive, opts) do
+    case :erl_tar.extract(archive, [:compressed, cwd: opts[:archives_dir]]) do
+      :ok ->
+        move_extracted_files(opts)
+      {:error, reason} ->
+        msg = :erl_tar.format_error(reason)
+        {:error, "error while extracting the tar archive: #{msg}"}
     end
-
-    move_extracted_files(Path.dirname(archive))
-    File.rm_rf!("tmp")
   end
 
   @spec arch_and_os() :: binary
@@ -84,13 +102,8 @@ defmodule SkylightBootstrap do
   end
 
   @spec basename(opts) :: Path.t
-  defp basename(_opts) do
-    "skylight_#{arch_and_os()}.tar.gz"
-  end
-
-  @spec destination(opts) :: Path.t
-  defp destination(opts) do
-    Path.join([File.cwd!, "tmp", basename(opts)])
+  defp basename(opts) do
+    "skylight_#{opts[:arch]}.tar.gz"
   end
 
   @spec http_module() :: module
@@ -100,8 +113,11 @@ defmodule SkylightBootstrap do
 
   defp verify_checksum(sha2, tar_gz) do
     tar_sha2 = sha2(tar_gz)
-    unless sha2 == tar_sha2 do
-      throw {:error, "checksum mismatch: expected #{inspect sha2}, got #{inspect tar_sha2}"}
+
+    if sha2 == tar_sha2 do
+      :ok
+    else
+      {:error, "checksum mismatch: expected #{inspect sha2}, got #{inspect tar_sha2}"}
     end
   end
 
@@ -109,30 +125,31 @@ defmodule SkylightBootstrap do
     :crypto.hash(:sha256, term) |> Base.encode16(case: :lower)
   end
 
-  defp move_extracted_files(extraction_dir) do
-    files = ~w(skylight_dlopen.c skylight_dlopen.h skylightd libskylight.#{so_ext()})
-    Enum.each(files, &move_extracted_file(extraction_dir, &1))
+  defp move_extracted_files(opts) do
+    files = ~w[skylight_dlopen.c skylight_dlopen.h skylightd] ++ [opts[:libskylight_name]]
+    Enum.each(files, &move_extracted_file(&1, opts))
   end
 
-  defp move_extracted_file(extraction_dir, "skylight_dlopen." <> ext = file) when ext in ["h", "c"] do
-    File.rename(Path.join(extraction_dir, file), Path.join("c_src", file))
+  defp move_extracted_file("skylight_dlopen." <> ext = file, opts) when ext in ~w(h c) do
+    move_extracted_or_raise(file, Path.join(opts[:c_src_dir], file), opts)
   end
 
-  defp move_extracted_file(extraction_dir, "skylightd" = file) do
-    File.rename(Path.join(extraction_dir, file), Path.join("priv", file))
+  defp move_extracted_file("skylightd" = file, opts) do
+    move_extracted_or_raise(file, Path.join(opts[:priv_dir], file), opts)
   end
 
-  defp move_extracted_file(extraction_dir, "libskylight." <> _ = file) do
-    File.rename(Path.join(extraction_dir, file), Path.join("priv", file))
+  defp move_extracted_file("libskylight." <> _ = file, opts) do
+    move_extracted_or_raise(file, Path.join(opts[:priv_dir], file), opts)
   end
 
-  defp artifacts_already_exists? do
-    files = ~w(c_src/skylight_dlopen.h
-               c_src/skylight_dlopen.c
-               priv/skylightd
-               priv/libskylight.#{so_ext()})
-
-    Enum.all?(files, &File.regular?/1)
+  defp move_extracted_or_raise(src, dst, opts) do
+    case File.rename(Path.join(opts[:archives_dir], src), dst) do
+      :ok ->
+        :ok
+      {:error, reason} ->
+        formatted = :file.format_error(reason)
+        raise "couldn't move #{src} to #{dst}: #{formatted}"
+    end
   end
 
   defp so_ext do
@@ -141,5 +158,19 @@ defmodule SkylightBootstrap do
       {:unix, _}       -> "so"
       _                -> raise "unsupported OS"
     end
+  end
+
+  defp prepare_destination(destination) do
+    destination |> Path.dirname() |> File.mkdir_p!()
+    File.rm_rf!(destination)
+  end
+
+  defp default_opts(opts) do
+    opts
+    |> Keyword.put_new(:arch, arch_and_os())
+    |> Keyword.put_new(:archives_dir, Path.join(File.cwd!, "tmp"))
+    |> Keyword.put_new(:c_src_dir, Path.join(File.cwd!, "c_src"))
+    |> Keyword.put_new(:priv_dir, Path.join(File.cwd!, "priv"))
+    |> Keyword.put_new(:libskylight_name, "libskylight.#{so_ext()}")
   end
 end
