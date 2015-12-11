@@ -1,10 +1,38 @@
 Code.require_file "./skylight_bootstrap/http.ex", __DIR__
 
 defmodule SkylightBootstrap do
+  @moduledoc """
+  Bootstrapping code for Skylight.
+
+  This module provides functions to bootstrap Skylight, meaning:
+
+    * downloading the Skylight precompiled code from the Skylight servers
+    * extracting the downloaded archive and moving the extracted files into
+    * their correct locations (so that `:skylight` can be compiled correctly).
+
+  Some functions in this module take a list of options as an argument; these
+  options can be used to configure things like destination directories,
+  architecture, and so on. The complete list of options is this.
+
+    * `:arch` - (binary) the cpu/os architecture for the code to download (e.g.,
+      `x86_64-darwin`). Defaults to the current architecture.
+    * `:archives_dir` - (binary) the directory where the archive should be
+      downloaded. Defaults to `MIX_PROJ_ROOT/tmp`.
+    * `:c_src_dir` - (binary) the directory where the source C files should be
+      moved to (so that `make` can compile `:skylight` using those
+      files). Defaults to `MIX_PROJ_ROOT/c_src`.
+    * `:priv_dir` - (binary) the `priv` directory where things like `skylightd`
+      and `libskylight` should be moved to; this should be the `priv` directory
+      at the root of the Mix project, and not the one returned by functions like
+      `:code.priv_dir/1`. Defaults to `MIX_PROJ_ROOT/priv`.
+    * `:libskylight_name` - (binary) the name of the `libskylight` file to
+      extract from the archive. Defaults to `libskylight.SO_EXTENSION`, where
+      the extension is determined based on the current OS.
+
+  """
+
   alias SkylightBootstrap.HTTP
   require Logger
-
-  @typep opts :: %{}
 
   @base_url "https://s3.amazonaws.com/skylight-agent-packages/skylight-native"
 
@@ -16,6 +44,23 @@ defmodule SkylightBootstrap do
   }
 
   @doc """
+  Fetches the precompiled code archive based on the given options.
+
+  This function will write over the existing archive if such an archive exists.
+  This function is only responsible for fetching the correct archive for the
+  architecture in the options from the Skylight server; it's not responsible for
+  extracting that archive or moving the extracted files around. See `build/1`
+  for that.
+
+  The supported options are described in the documentation for the
+  `SkylightBootstrap` module. `{:error, _}` will be returned in case something
+  goes wrong, like:
+
+    * the architecture in the `:arch` option or the one of the current operating
+      system/machine is not supported
+    * there's a network error when fetching the precompiled code
+    * the checksum of the downloaded archive doesn't match the expected one
+
   """
   @spec fetch(Keyword.t) :: :ok | {:error, binary}
   def fetch(opts \\ []) do
@@ -55,18 +100,31 @@ defmodule SkylightBootstrap do
   defp supported_arch?(_arch),
     do: false
 
-  def build(opts \\ []) do
+  @doc """
+  Extracts the archive specified by the `opts` and moves the extracted files
+  around.
+
+  The supported options are described in the documentation for the
+  `SkylightBootstrap` module. `{:error, _}` will be returned in case something
+  goes wrong, like:
+
+    * the archive doesn't exist
+    * the archive is not a valid tar archive
+
+  """
+  @spec extract_and_move(Keyword.t) :: :ok | {:error, binary}
+  def extract_and_move(opts \\ []) do
     opts    = default_opts(opts)
     archive = Path.join(opts[:archives_dir], basename(opts))
 
     if File.exists?(archive) do
-      build_existing_archive(archive, opts)
+      do_extract_and_move(archive, opts)
     else
       {:error, "the archive with Skylight artifacts in it was not found at #{archive}"}
     end
   end
 
-  defp build_existing_archive(archive, opts) do
+  defp do_extract_and_move(archive, opts) do
     case :erl_tar.extract(archive, [:compressed, cwd: opts[:archives_dir]]) do
       :ok ->
         move_extracted_files(opts)
@@ -96,17 +154,14 @@ defmodule SkylightBootstrap do
     result
   end
 
-  @spec source_url(opts) :: Path.t
   defp source_url(opts) do
     Enum.join([@base_url, @version, basename(opts)], "/")
   end
 
-  @spec basename(opts) :: Path.t
   defp basename(opts) do
     "skylight_#{opts[:arch]}.tar.gz"
   end
 
-  @spec http_module() :: module
   defp http_module do
     Application.get_env(:skylight, :fetcher_http_module, HTTP)
   end
@@ -126,8 +181,7 @@ defmodule SkylightBootstrap do
   end
 
   defp move_extracted_files(opts) do
-    files = ~w[skylight_dlopen.c skylight_dlopen.h skylightd] ++ [opts[:libskylight_name]]
-    Enum.each(files, &move_extracted_file(&1, opts))
+    Enum.each(files_to_extract(opts), &move_extracted_file(&1, opts))
   end
 
   defp move_extracted_file("skylight_dlopen." <> ext = file, opts) when ext in ~w(h c) do
@@ -163,6 +217,13 @@ defmodule SkylightBootstrap do
   defp prepare_destination(destination) do
     destination |> Path.dirname() |> File.mkdir_p!()
     File.rm_rf!(destination)
+  end
+
+  defp files_to_extract(opts) do
+    ["skylight_dlopen.c",
+     "skylight_dlopen.h",
+     "skylightd",
+     opts[:libskylight_name]]
   end
 
   defp default_opts(opts) do

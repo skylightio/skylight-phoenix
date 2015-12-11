@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Compile.Skylight do
 
   def run(_args) do
     SkylightBootstrap.fetch()
-    SkylightBootstrap.build()
+    SkylightBootstrap.extract_and_move()
     compile_c_code()
   end
 
