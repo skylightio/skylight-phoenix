@@ -25,3 +25,6 @@ erl_crash.dump
 # Artifacts of the compilation of the native C code in this library
 /priv/skylight_nif.so*
 /tmp
+
+# Don't ignore these!
+!/test/bootstrap/fixtures/skylight_x86_64-darwin.tar.gz
