@@ -6,9 +6,15 @@ defmodule Mix.Tasks.Compile.Skylight do
   @shortdoc "Fetches Skylight binaries and compiles native C code"
 
   def run(_args) do
-    SkylightBootstrap.fetch()
-    SkylightBootstrap.extract_and_move()
-    compile_c_code()
+    if SkylightBootstrap.artifacts_already_exist? do
+      :ok = SkylightBootstrap.extract_and_move()
+      compile_c_code()
+    else
+      # TODO make this message way nicer
+      Mix.shell.error "Run `mix skylight.fetch`"
+    end
+
+    :ok
   end
 
   defp compile_c_code do
@@ -36,6 +42,7 @@ defmodule Skylight.Mixfile do
      start_permanent: Mix.env == :prod,
      compilers: [:skylight] ++ Mix.compilers,
      aliases: [test: "test --no-start"],
+     elixirc_paths: elixirc_paths(),
      deps: deps]
   end
 
@@ -46,6 +53,14 @@ defmodule Skylight.Mixfile do
            auth_url: "https://auth.skylight.io/agent",
            validate_authentication: false],
      mod: {Skylight, []}]
+  end
+
+  defp elixirc_paths do
+    if SkylightBootstrap.artifacts_already_exist? do
+      ~w(lib bootstrap/mix/tasks)
+    else
+      ~w(bootstrap/mix/tasks)
+    end
   end
 
   defp deps do
