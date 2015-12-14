@@ -44,6 +44,20 @@ defmodule SkylightBootstrap do
   }
 
   @doc """
+  Tells whether the precompiled Skylight code already exists based on the given
+  options.
+
+  The supported options are described in the documentation for the
+  `SkylightBootstrap` module.
+  """
+  @spec artifacts_already_exist?(Keyword.t) :: boolean
+  def artifacts_already_exist?(opts \\ []) do
+    opts = default_opts(opts)
+    path = Path.join(opts[:archives_dir], basename(opts))
+    File.regular?(path)
+  end
+
+  @doc """
   Fetches the precompiled code archive based on the given options.
 
   This function will write over the existing archive if such an archive exists.
@@ -216,7 +230,6 @@ defmodule SkylightBootstrap do
 
   defp prepare_destination(destination) do
     destination |> Path.dirname() |> File.mkdir_p!()
-    File.rm_rf!(destination)
   end
 
   defp files_to_extract(opts) do

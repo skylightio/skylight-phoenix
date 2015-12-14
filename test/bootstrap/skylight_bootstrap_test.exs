@@ -66,6 +66,7 @@ defmodule SkylightBootstrapTest do
   end
 
   test "extract_and_move/1: bad archive" do
+    File.mkdir_p! fixture_path("archives")
     File.write! fixture_path("archives/#{@archive_name}"), "foo"
     assert {:error, msg} = SB.extract_and_move(archives_dir: fixture_path("archives"), arch: @arch)
     assert msg == "error while extracting the tar archive: Unexpected end of file"
@@ -95,5 +96,19 @@ defmodule SkylightBootstrapTest do
     assert File.exists?(Path.join(c_src, "skylight_dlopen.c"))
     assert File.exists?(Path.join(priv, "skylightd"))
     assert File.exists?(Path.join(priv, "libskylight.dylib"))
+  end
+
+  test "artifacts_already_exist?/1" do
+    archives_dir = fixture_path("archives")
+    opts = [archives_dir: archives_dir, arch: @arch]
+
+    File.rm_rf!(archives_dir)
+
+    refute SB.artifacts_already_exist?(opts)
+
+    File.mkdir_p!(archives_dir)
+    File.cp!(fixture_path(@archive_name), Path.join(archives_dir, @archive_name))
+
+    assert SB.artifacts_already_exist?(opts)
   end
 end
