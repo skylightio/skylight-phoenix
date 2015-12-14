@@ -1,5 +1,3 @@
-Code.require_file "./bootstrap/skylight_bootstrap.ex", File.cwd!()
-
 defmodule Mix.Tasks.Skylight.Fetch do
   use Mix.Task
 
@@ -8,7 +6,6 @@ defmodule Mix.Tasks.Skylight.Fetch do
   @moduledoc "TODO"
 
   def run(_args) do
-    SkylightBootstrap.fetch()
-    :ok
+    :ok = SkylightBootstrap.fetch()
   end
 end
