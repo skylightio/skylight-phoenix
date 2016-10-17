@@ -1,0 +1,11 @@
+language: elixir
+elixir:
+  - 1.3.4
+otp_release:
+  - 19.1
+
+before_script:
+    - mix skylight.fetch
+
+env:
+    - DIREWOLF_PHOENIX_TOKEN=test # Not sure why we need this
