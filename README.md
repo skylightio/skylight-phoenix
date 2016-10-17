@@ -4,16 +4,68 @@
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+  1. Add Skylight to your [list of dependencies](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#external-dependencies).
 
-  1. Add direwolf_phoenix_agent to your list of dependencies in `mix.exs`:
+  2. Add Skylight to your [applications array](http://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html#the-application-callback).
 
-        def deps do
-          [{:direwolf_phoenix_agent, "~> 0.0.1"}]
+  3. Configure in `config/config.exs`:
+
+      * Add Skylight configuration options
+
+        ```elixir
+        config :skylight,
+          authentication: {:system, "SKYLIGHT_AUTHENTICATION"}
+        ```
+
+      * Set up as an instrumenter for your Endpoint:
+
+        ```elixir
+        config :my_app, MyApp.Endpoint,
+          instrumenters: [Skylight] # Add this line to existing config
+        ```
+
+  4. Add Plug to Endpoint (`lib/APP/endpoint.ex`)
+
+      ```elixir
+      defmodule MyApp.Endpoint do
+        # Add before first plug
+        plug Skylight.Plug
+      end
+      ```
+
+  5. Set up Ecto:
+
+      * In `lib/APP/repo.ex`
+
+        ```elixir
+        defmodule MyApp.Repo do
+          use Skylight.Ecto.Repo # Add this line
         end
+        ```
 
-  2. Ensure direwolf_phoenix_agent is started before your application:
+      * In `web/web.ex`
 
-        def application do
-          [applications: [:direwolf_phoenix_agent]]
-        end
+        Replace references to:
+
+        ```elixir
+        alias MyApp.Repo
+        ```
+
+        with
+
+        ```elixir
+        alias MyApp.Repo.Skylight, as: Repo
+        ```
+
+
+## Development
+
+```shell
+$ mix deps.get
+$ mix skylight.fetch
+$ DIREWOLF_PHOENIX_TOKEN=TEST_APP_AUTH_TOKEN mix test
+```
+
+## Notes
+
+If you have issues with crypto/OpenSSL try installing Erlang from https://packages.erlang-solutions.com/erlang/.

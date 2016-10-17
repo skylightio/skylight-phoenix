@@ -36,11 +36,12 @@ defmodule SkylightBootstrap do
 
   @base_url "https://s3.amazonaws.com/skylight-agent-packages/skylight-native"
 
-  @version "0.7.0-629fc27"
+  @version "1.0.1-5a25d4e"
   @checksums %{
-    "x86-linux"     => "cd601750d0250d9e2cfed96fa9d4ac642a1b22053cf5ee5a7523da2f583fdf2d",
-    "x86_64-linux"  => "eef6301799be9e1e6e70f71c59ac1449f52f65cf1dfe5c996762a42f31e08d5f",
-    "x86_64-darwin" => "62b19c0f34e983d8d752b1b9514d427cc019cfdf2f3f6b2f1424cf06710330d8",
+    "x86-linux"         => "abe2eb31d0e51b58fae0220a92efaf0a7c4db298cad387a2aa23d59f42bf70a3",
+    "x86_64-linux"      => "f4501e796f0c866fb137aec78140af7b2e21fb3eb2b6758bf98ee0da1e55ffd0",
+    "x86_64-linux-musl" => "370f4bb9cb7658629caa9ba7945f0456b53aa1b09cfb7e7c88e12959758e3de3",
+    "x86_64-darwin"     => "6167c4f35244779d0d20ca573c4fd23b4205f75edfa80395933768e2a002c156",
   }
 
   @doc """
