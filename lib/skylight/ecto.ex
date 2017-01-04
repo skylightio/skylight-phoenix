@@ -25,10 +25,15 @@ if Code.ensure_compiled?(Ecto) do
       try do
         fun.()
       after
-        if trace && (log_entry = Process.get(:ecto_log_entry)) do
-          :ok = Trace.set_span_sql(trace, handle, log_entry.query, sql_flavor(repo))
+        if trace do
+          log_entry = Process.get(:ecto_log_entry)
+          if log_entry do
+            :ok = Trace.set_span_sql(trace, handle, log_entry.query, sql_flavor(repo))
+            Process.delete(:ecto_log_entry)
+          end
           :ok = Trace.mark_span_as_done(trace, handle)
-          Process.delete(:ecto_log_entry)
+        else
+          :ok
         end
       end
     end
