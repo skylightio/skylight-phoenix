@@ -39,4 +39,5 @@ config :my_app, MyApp.Repo,
   password: "postgres",
   database: "my_app_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 10,
+  loggers: [{Ecto.LogEntry, :log, []}, {Skylight.Ecto.Logger, :log, []}]

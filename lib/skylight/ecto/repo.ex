@@ -5,12 +5,6 @@ defmodule Skylight.Ecto.Repo do
 
   defmacro __using__(_opts) do
     quote unquote: false do
-      def log(entry) do
-        Process.put(:ecto_log_entry, entry)
-        super(entry)
-      end
-
-      defoverridable [log: 1]
 
       module_code = quote do
         # The repo we want to proxy to is the repository that calls this
