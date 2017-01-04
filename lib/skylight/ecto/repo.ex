@@ -94,11 +94,11 @@ defmodule Skylight.Ecto.Repo do
         end
 
         # Functions with no default values, where we can use defdelegate.
-        defdelegate [__adapter__,
-                     __query_cache__,
-                     __repo__,
-                     __pool__,
-                     log(entry)], to: @proxy_repo
+        defdelegate __adapter__,      to: @proxy_repo
+        defdelegate __query_cache__,  to: @proxy_repo
+        defdelegate __repo__,         to: @proxy_repo
+        defdelegate __pool__,         to: @proxy_repo
+        defdelegate log(entry),       to: @proxy_repo
 
         defp instrument(fun) do
           Skylight.Ecto.instrument(@proxy_repo, fun)
