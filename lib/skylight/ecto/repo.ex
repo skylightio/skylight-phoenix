@@ -3,6 +3,8 @@ defmodule Skylight.Ecto.Repo do
   TODO
   """
 
+  # NOTE: This will end up instrumenting adapter time as well as query time.
+
   defmacro __using__(_opts) do
     quote unquote: false do
 
