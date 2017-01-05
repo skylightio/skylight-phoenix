@@ -14,18 +14,18 @@ if Code.ensure_compiled?(Ecto) do
     @spec instrument(Ecto.Repo.t, (() -> term)) :: :ok
     def instrument(repo, fun) do
       trace = Trace.fetch()
-      handle = nil
 
-      if trace do
-        handle = Trace.instrument(trace, "db.ecto.query")
+      handle = if trace do
+        Trace.instrument(trace, "db.ecto.query")
       else
         Logger.debug "No trace found in the current process"
+        nil
       end
 
       try do
         fun.()
       after
-        if trace do
+        if trace && handle do
           log_entry = Process.get(:ecto_log_entry)
           if log_entry do
             :ok = Trace.set_span_sql(trace, handle, log_entry.query, sql_flavor(repo))
