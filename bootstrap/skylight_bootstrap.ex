@@ -36,13 +36,13 @@ defmodule SkylightBootstrap do
 
   @base_url "https://s3.amazonaws.com/skylight-agent-packages/skylight-native"
 
-  @version "1.1.0-0fbf8ce"
+  @version "1.1.0-7fb2851"
   @checksums %{
-    "x86-linux"         => "3c688d9981653977982b94b5e687ecdf3bb5e012f535f96dc294f7ac983d0c48",
-    "x86_64-linux"      => "90ab6d6e1416cb9a6d8997be7614cc9754358ed77045bfbc0cc8be71bd7964b4",
-    "x86_64-linux-musl" => "f755499717b4c31dbfd0c572495998ef8f78c5ca395b1ce7efbdbc11eb9701e6",
-    "x86_64-darwin"     => "e915f9062ec53727dacd0c373023aa7ce6477fa0d1735bb5da9f53a181eddce5",
-    "x86_64-freebsd"    => "a74bbf6ca54867f875eb10d9eeb0bab3d0876ca7c757b0805024d08ec0a88de1"
+    "x86-linux"         => "3a2ed960f7eff3f4bd68be911542433f0d1e90e50f9bdb059d9b3125436106ac",
+    "x86_64-linux"      => "aefc38bcdbb230b66290bcad36b182f36e8ca82d35f311161652a49fa07e7188",
+    "x86_64-linux-musl" => "9e8157061ce68e5f0a79faea5ad0e8d7d70ce33b17bc9806055c8f6b3bbed423",
+    "x86_64-darwin"     => "edf0208047798e0a9dd8d288f1ff42d2b845f139563a20c4a3fc897538838690",
+    "x86_64-freebsd"    => "d1ad91bd4a2faebe2aa1c5d6aef1748a4b25990f4be6a1c73e106d72a1d1d5a8"
   }
 
   @doc """
