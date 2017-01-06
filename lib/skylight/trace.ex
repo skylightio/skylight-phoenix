@@ -138,8 +138,6 @@ defmodule Skylight.Trace do
   @spec set_span_sql(t, handle, binary, sql_flavor) :: :ok | :error
   def set_span_sql(%Trace{} = trace, handle, sql, flavor)
       when is_integer(handle) and is_binary(sql) and flavor in unquote(Map.keys(@sql_flavors)) do
-    # The native library doesn't yet handle Postgres properly
-    flavor = if flavor == :postgres, do: :generic, else: flavor
     NIF.trace_span_set_sql(trace.resource, handle, sql, @sql_flavors[flavor])
   end
 
