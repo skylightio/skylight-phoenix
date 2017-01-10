@@ -43,6 +43,14 @@
         end
         ```
 
+      * In `config/prod.secret.exs`
+
+        ```elixir
+        config :my_app, MyApp.Repo,
+          ...
+          loggers: [{Ecto.LogEntry, :log, []}, {Skylight.Ecto.Logger, :log, []}] # Add this line
+        ```
+
       * In `web/web.ex`
 
         Replace references to:
