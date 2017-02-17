@@ -11,7 +11,10 @@ defmodule Mix.Tasks.Compile.Skylight do
       compile_c_code()
     else
       # TODO make this message way nicer
-      Mix.shell.error "Run `mix skylight.fetch`"
+      # Mix.shell.error "Run `mix skylight.fetch`"
+      :ok = SkylightBootstrap.fetch()
+      :ok = SkylightBootstrap.extract_and_move()
+      compile_c_code()
     end
 
     :ok

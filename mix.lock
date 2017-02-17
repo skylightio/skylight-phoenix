@@ -1,4 +1,4 @@
-%{"cowboy": {:hex, :cowboy, "1.0.3", "101a5f826ce9a1ebb2ea53a2cdfffc74736e99807e9e492ecd5f26544c04082b", [:rebar, :make], [{:cowlib, "~> 1.0.0", [hex: :cowlib, optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, optional: false]}]},
+%{"cowboy": {:hex, :cowboy, "1.0.3", "101a5f826ce9a1ebb2ea53a2cdfffc74736e99807e9e492ecd5f26544c04082b", [:make, :rebar], [{:cowlib, "~> 1.0.0", [hex: :cowlib, optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, optional: false]}]},
   "cowlib": {:hex, :cowlib, "1.0.1", "175a633c472058bbeb1b238a6409766a48b52b43b7b687ed70f03cf6e854b7d9", [:make], []},
   "decimal": {:hex, :decimal, "1.1.0", "3333732f17a90ff3057d7ab8c65f0930ca2d67e15cca812a91ead5633ed472fe", [:mix], []},
   "ecto": {:hex, :ecto, "1.0.6", "c1831d44a9f4124f12306a3bf88c65fdd41cb64be69d389774630983e831304a", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, optional: false]}, {:mariaex, "~> 0.4.1", [hex: :mariaex, optional: true]}, {:poison, "~> 1.0", [hex: :poison, optional: true]}, {:poolboy, "~> 1.4", [hex: :poolboy, optional: false]}, {:postgrex, "~> 0.9.1", [hex: :postgrex, optional: true]}, {:sbroker, "~> 0.7", [hex: :sbroker, optional: true]}]},
