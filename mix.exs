@@ -55,11 +55,7 @@ defmodule Skylight.Mixfile do
   end
 
   defp elixirc_paths do
-    if SkylightBootstrap.artifacts_already_exist? do
-      ~w(lib bootstrap/mix/tasks)
-    else
-      ~w(bootstrap/mix/tasks)
-    end
+    ~w(lib bootstrap/mix/tasks)
   end
 
   defp deps do
