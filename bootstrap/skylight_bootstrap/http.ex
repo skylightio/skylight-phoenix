@@ -7,7 +7,7 @@ defmodule SkylightBootstrap.HTTP do
   @spec get(binary) :: {:ok, binary} | {:error, term}
   def get(url) do
     request = {to_char_list(url), []}
-    http_opts = [timeout: 10_000, autoredirect: true]
+    http_opts = [connect_timeout: 10_000, autoredirect: true]
     opts      = [body_format: :binary]
 
     case :httpc.request(:get, request, http_opts, opts) do
