@@ -107,7 +107,7 @@ defmodule SkylightBootstrap do
           err -> err
         end
       {:error, reason} ->
-        {:error, "failed to fetch from #{source_url}: #{inspect reason}"}
+        {:error, "Failed to fetch Skylight native artifacts from #{source_url}: #{inspect reason}"}
     end
   end
 

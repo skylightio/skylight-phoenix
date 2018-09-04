@@ -42,7 +42,7 @@ defmodule SkylightBootstrapTest do
 
     capture_log fn ->
       assert {:error, error} = SB.fetch()
-      assert String.starts_with?(error, "failed to fetch from")
+      assert String.starts_with?(error, "Failed to fetch Skylight native artifacts from")
       assert String.ends_with?(error, ":an_error")
     end
   end
