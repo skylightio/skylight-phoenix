@@ -7,23 +7,31 @@ defmodule Skylight.NIFTest do
   @priv Application.app_dir(:skylight, "priv")
 
   @bare_agent_env [
-    "SKYLIGHT_AUTHENTICATION", TestHelpers.auth_token(),
-    "SKYLIGHT_VERSION", "0.8.1",
-    "SKYLIGHT_LAZY_START", "false",
-    "SKYLIGHT_DAEMON_EXEC_PATH", Path.join(@priv, "skylightd"),
-    "SKYLIGHT_DAEMON_LIB_PATH", @priv,
-    "SKYLIGHT_SOCKDIR_PATH", "/tmp",
-    "SKYLIGHT_AUTH_URL", "https://auth.skylight.io/agent",
-    "SKYLIGHT_VALIDATE_AUTHENTICATION", "false",
+    "SKYLIGHT_AUTHENTICATION",
+    TestHelpers.auth_token(),
+    "SKYLIGHT_VERSION",
+    "0.8.1",
+    "SKYLIGHT_LAZY_START",
+    "false",
+    "SKYLIGHT_DAEMON_EXEC_PATH",
+    Path.join(@priv, "skylightd"),
+    "SKYLIGHT_DAEMON_LIB_PATH",
+    @priv,
+    "SKYLIGHT_SOCKDIR_PATH",
+    "/tmp",
+    "SKYLIGHT_AUTH_URL",
+    "https://auth.skylight.io/agent",
+    "SKYLIGHT_VALIDATE_AUTHENTICATION",
+    "false"
   ]
 
   setup_all do
     instrumenter = instrumenter_new(@bare_agent_env)
     :ok = instrumenter_start(instrumenter)
 
-    on_exit fn ->
+    on_exit(fn ->
       :ok = instrumenter_stop(instrumenter)
-    end
+    end)
 
     {:ok, %{inst: instrumenter}}
   end
@@ -40,7 +48,7 @@ defmodule Skylight.NIFTest do
 
   test "trace_new/3" do
     trace = trace_new(hrtime(), UUID.uuid4(), "MyController#my_route")
-    assert resource?(trace)
+    assert is_reference(trace)
   end
 
   test "trace_start/1" do
@@ -89,8 +97,8 @@ defmodule Skylight.NIFTest do
   end
 
   test "lex_sql/1" do
-    sql = "SELECT * FROM my_table WHERE my_field = 'my value'";
-    assert lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?";
+    sql = "SELECT * FROM my_table WHERE my_field = 'my value'"
+    assert lex_sql(sql) == "SELECT * FROM my_table WHERE my_field = ?"
   end
 
   # For now, let's identify a resource as just an empty binary.
